@@ -96,13 +96,13 @@ velocity_commands = np.array([0.2, 0.0, 0.0])
 
 action = np.zeros(joint_num)
 
-# policy_path = os.path.join(
-#     os.getcwd(), "logs/rsl_rl/", "taixi_a2_velocity_rough/2026-07-16_09-11-43/",
-#     "exported/", "policy_20260716.pt"
-# )
-# print(f"policy_path: {policy_path}")
-# policy = torch.jit.load(policy_path)
-# policy.eval()
+policy_path = os.path.join(
+    os.getcwd(), "logs/rsl_rl/", "taixi_a2_velocity_rough/2026-07-28_09-58-52/",
+    "exported/", "policy_260728.pt"
+)
+print(f"policy_path: {policy_path}")
+policy = torch.jit.load(policy_path)
+policy.eval()
 
 
 
@@ -515,13 +515,13 @@ def main():
                     # obs_compute
                     compute_obs(data,velocity_commands, action, height_scanner_obs, step_count * sim_dt, add_noise=False)
                     # print(obs_fifo.get_fifo().shape)
-                    # obs_tensor = torch.from_numpy(obs_fifo.get_fifo()).float().unsqueeze(0)
-                    # with torch.no_grad():
-                    #     action_isaaclab = policy(obs_tensor).squeeze(0).numpy()
+                    obs_tensor = torch.from_numpy(obs_fifo.get_fifo()).float().unsqueeze(0)
+                    with torch.no_grad():
+                        action_isaaclab = policy(obs_tensor).squeeze(0).numpy()
 
-                    # action = np.clip(action_isaaclab, -clip_actions, clip_actions)
-                    # target_q = init_joint_pos_isaaclab + action * action_scale
-                    # data.ctrl = target_q[isaaclab_to_mj_act]
+                    action = np.clip(action_isaaclab, -clip_actions, clip_actions)
+                    target_q = init_joint_pos_isaaclab + action * action_scale
+                    data.ctrl = target_q[isaaclab_to_mj_act]
 
 
 

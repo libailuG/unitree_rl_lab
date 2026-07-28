@@ -143,13 +143,13 @@ python scripts/rsl_rl/train.py --task Taixi-A2-Velocity-Rough --num_envs 8192 --
 
 python scripts/rsl_rl/play.py --task Taixi-A2-Velocity-Rough \
     --num_envs 16 \
-    --checkpoint /home/libai/00_isaaclab/unitree_rl_lab/logs/rsl_rl/taixi_a2_velocity_rough/2026-07-10_16-44-19/model_1500.pt
- 
+    --checkpoint /home/libai/05_unitree_rl_lab/unitree_rl_lab/logs/rsl_rl/taixi_a2_velocity_rough/2026-07-28_09-58-52/model_2700.pt
+
 
 python scripts/rsl_rl/play.py --task Taixi-A2-Velocity-Rough \
     --num_envs 16 \
     --checkpoint /home/libai/00_isaaclab/unitree_rl_lab/logs/rsl_rl/taixi_a2_velocity_rough/2026-07-10_17-18-46/model_1000.pt
- 
+
 
 '''
 
@@ -163,7 +163,7 @@ python scripts/rsl_rl/train.py --task Unitree-G1-29dof-Velocity-Rough --num_envs
 python scripts/rsl_rl/play.py --task Unitree-G1-29dof-Velocity-Rough-Play \
     --num_envs 16 \
     --checkpoint /home/libai/00_isaaclab/unitree_rl_lab/logs/rsl_rl/g1_rough/2026-07-13_10-18-18/model_2999.pt
- 
+
 
 '''
 
