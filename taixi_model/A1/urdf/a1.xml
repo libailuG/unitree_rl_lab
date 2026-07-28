@@ -1,0 +1,206 @@
+<!-- ============================================================
+  MuJoCo XML for Unitree A1 (Biped Configuration)
+  Converted from a1.urdf (SolidWorks export)
+
+  Legs: 2 (right + left), 6 DOF per leg = 12 actuated joints
+  Sensors: joint encoders, IMU, foot contact, actuator force
+  Actuators: position-controlled PD motors on all revolute joints
+============================================================ -->
+
+<mujoco model="a1">
+
+  <!-- ========== Compiler & Options ========== -->
+  <compiler angle="radian" meshdir="../meshes"/>
+
+  <option timestep="0.005" gravity="0 0 -9.81">
+    <!-- <flag contactparam="enable"/> -->
+  </option>
+
+  <default>
+
+    <joint damping="0.1" armature="0.000"/>
+    <!-- <motor ctrlrange="-1 1" ctrllimited="false"/> -->
+
+    <default class="gemo_visual">  <!-- 只显示,不参与碰撞 -->
+      <geom contype="0" conaffinity="0"/>
+    </default>
+
+    <default class="gemo_collision">  <!-- 只参与碰撞 -->
+      <geom contype="1" conaffinity="1"/>
+    </default>
+
+  </default>
+
+  <!-- ========== Assets (STL Meshes) ========== -->
+  <asset>
+    <mesh name="mesh_base"        file="base_link.STL"/>
+    <mesh name="mesh_r_roll_1"    file="right_roll_link_1.STL"/>
+    <mesh name="mesh_r_thigh_2"   file="right_thigh_link_2.STL"/>
+    <mesh name="mesh_r_pitch_3"   file="right_pitch_link_3.STL"/>
+    <mesh name="mesh_r_pitch_4"   file="right_pitch_link_4.STL"/>
+    <mesh name="mesh_r_pitch_5"   file="right_pitch_link_5.STL"/>
+    <mesh name="mesh_r_roll_6"    file="right_roll_link_6.STL"/>
+    <mesh name="mesh_l_roll_1"    file="left_roll_link_1.STL"/>diaginertia="0.00204 0.00291 0.00223"
+    <mesh name="mesh_l_thigh_2"   file="left_thigh_link_2.STL"/>
+    <mesh name="mesh_l_pitch_3"   file="left_pitch_link_3.STL"/>
+    <mesh name="mesh_l_pitch_4"   file="left_pitch_link_4.STL"/>
+    <mesh name="mesh_l_pitch_5"   file="left_pitch_link_5.STL"/>
+    <mesh name="mesh_l_roll_6"    file="left_roll_link_6.STL"/>
+  </asset>
+
+  <asset>
+      <texture name='texture_plane' type='2d' builtin='checker' rgb1='0.2745 0.5098 0.7059' rgb2='0.5294 0.8078 0.9804' width='128' height='128'/>
+      <material name='material_plane' reflectance='0.0' texture='texture_plane' texrepeat='1 1' texuniform='true'/>
+      <material name="gray" rgba="0.5 0.5 0.5 1"/>
+      <material name="blue" rgba="0 0 1 1"/>
+      <material name="red" rgba="1 0 0 1"/>
+      <material name="green" rgba="0 1 0 1"/>
+  </asset>
+
+  <!-- ========== Worldbody ========== -->
+  <worldbody>
+    <geom name="floor" type="plane" conaffinity="2" size="100 100 .2" material="material_plane"/>
+       <light directional="true" ambient=".3 .3 .3" pos="30 30 30" dir="0 -.5 -1"
+                    diffuse=".5 .5 .5" specular=".5 .5 .5" />
+
+
+    <body name="base_link" pos="0 0 1.1" euler="0 0 0">
+      <freejoint name="base_free"/>
+      <inertial pos="0.12 0 0.33" mass="1.48" fullinertia="0.5 0.53 0.06 0 -0.12 0"/>
+      <geom class="gemo_visual" type="mesh" mesh="mesh_base" rgba="1 0 0 1"/>
+      <geom class="gemo_collision" type="box" size="0.2 0.15 0.75" pos="0.2 0 0.75"/>
+      <body name="right_roll_link_1" pos="0.005 -0.075 0" euler="0 1.5708 0">
+        <inertial pos="0.05697 -0.10361 0.0902" mass="0.34867" fullinertia="0.00204 0.00291 0.00223 0.00049 -0.00086 0.00073"/>
+        <joint name="right_roll_joint_1" axis="0 0 1" range="-1.57 1.57"/>
+        <geom class="gemo_visual" type="mesh" mesh="mesh_r_roll_1"/>
+
+        <body name="right_thigh_link_2" pos="0.083546 -0.12797 0.159" euler="1.5708 -1.5708 0">
+          <inertial pos="0.00843 -0.00006 -0.04551" mass="0.46018"
+                    fullinertia="0.00035 0.00023 0.00016 0 0 0"/>
+          <joint name="right_thigh_joint_2" axis="0 0 1" range="-1.047 1.047"/>
+          <geom class="gemo_visual" type="mesh" mesh="mesh_r_thigh_2"/>
+            <body name="right_pitch_link_3" pos="0.022999 -0.00016171 -0.0455" euler="0 -1.5708 0">
+              <inertial pos="-0.17566 0.00359 0.01324" mass="0.81621"
+                        fullinertia="0.00052 0.01191 0.01225 -0.00055 0.00068 0.00004"/>
+              <joint name="right_pitch_joint_3" axis="0 0 1" range="-2.093 1.047"/>
+              <geom class="gemo_visual" type="mesh" mesh="mesh_r_pitch_3"/>
+              <body name="right_pitch_link_4" pos="-0.39999 -0.0025996 0.0165" euler="0 0 0">
+                <inertial pos="-0.14741 -0.00155 0.00861" mass="0.10574"
+                          fullinertia="0.00001 0.0018 0.0018 -0.00002 0.00001 0"/>
+                <joint name="right_pitch_joint_4" axis="0 0 1" range="0 1.047"/>
+                <geom class="gemo_visual" type="mesh" mesh="mesh_r_pitch_4"/>
+                <body name="right_pitch_link_5" pos="-0.39198 -0.0041092 0.005" euler="0 0 0">
+                  <inertial pos="-0.00085 -0.04624 0.02748" mass="0.04908"
+                            fullinertia="0.00011 0.00007 0.00005 0 0 0.00004"/>
+                  <joint name="right_pitch_joint_5" axis="0 0 1" range="-1.047 1.047"/>
+                  <geom class="gemo_visual" type="mesh" mesh="mesh_r_pitch_5"/>
+                  <body name="right_roll_link_6" pos="-0.0014433 -0.078215 0.085" euler="-1.5708 0 1.5708">
+                    <inertial pos="0.00047 0.08668 0.06284" mass="0.21281"
+                              fullinertia="0.00147 0.00134 0.00043 0 0 -0.00031"/>
+                    <joint name="right_roll_joint_6" axis="0 0 1" range="-1.047 1.047" />
+                    <geom class="gemo_visual" type="mesh" mesh="mesh_r_roll_6" rgba="0 0 1 1"/>
+                    <body name="leg_rfoot_link" pos="0 0.125 0.115" euler="1.5708 0 0">
+                      <inertial pos="0 0 0" mass="0.0001"
+                                fullinertia="0.000001 0.000001 0.000001 0 0 0"/>
+                      <geom class="gemo_collision" type="box" size="0.06 0.1275 0.015" pos="0 0 0.025" rgba="0 1 0 1"/>
+                    </body>
+                  </body>
+                </body>
+              </body>
+            </body>
+        </body>
+      </body>
+      <body name="left_roll_link_1" pos="0 0.075 0" euler="0 1.5708 0">
+        <inertial pos="0.05693 0.10363 0.0952" mass="0.34867" fullinertia="0.00204 0.00291 0.00223 -0.00049 -0.00086 -0.00073"/>
+        <joint name="left_roll_joint_1" axis="0 0 1" range="-1.57 1.57"/>
+        <geom class="gemo_visual" type="mesh" mesh="mesh_l_roll_1"/>
+        <body name="left_thigh_link_2" pos="0.0835 0.128 0.164" euler="1.5708 -1.5708 0">
+          <inertial pos="-0.00843 -0.00038 -0.04549" mass="0.46018" fullinertia="0.00034 0.00023 0.00016 0.00001 0 0"/>
+          <joint name="left_thigh_joint_2" axis="0 0 1" range="-1.047 1.047"/>
+          <geom class="gemo_visual" type="mesh" mesh="mesh_l_thigh_2"/>
+          <body name="left_pitch_link_3" pos="-0.022975 -0.0010661 -0.0455" euler="0 -1.5708 0">
+            <inertial pos="-0.17567 0.00217 -0.01324" mass="0.81621" fullinertia="0.00053 0.0119 0.01225 -0.00064 -0.00068 -0.00005"/>
+            <joint name="left_pitch_joint_3" axis="0 0 1" range="-2.093 1.047"/>
+            <geom class="gemo_visual" type="mesh" mesh="mesh_l_pitch_3"/>
+            <body name="left_pitch_link_4" pos="-0.39996 -0.0058275 -0.0165" euler="0 0 0">
+              <inertial pos="-0.14741 0.00138 -0.00861" mass="0.10574" fullinertia="0.00001 0.0018 0.0018 0.00002 -0.00001 0"/>
+              <joint name="left_pitch_joint_4" axis="0 0 1" range="0 1.047"/>
+              <geom class="gemo_visual" type="mesh" mesh="mesh_l_pitch_4"/>
+              <body name="left_pitch_link_5" pos="-0.39198 0.0036803 -0.005" euler="0 0 0">
+                <inertial pos="-0.00024 -0.04625 -0.02748" mass="0.04908" fullinertia="0.00011 0.00007 0.00005 0 0 -0.00004"/>
+                <joint name="left_pitch_joint_5" axis="0 0 1" range="-1.047 1.047"/>
+                <geom class="gemo_visual" type="mesh" mesh="mesh_l_pitch_5"/>
+                <body name="left_roll_link_6" pos="-0.00035346 -0.068228 -0.085" euler="-1.5708 0 1.5708">
+                  <inertial pos="0.00067 0.08724 0.05336" mass="0.21281" fullinertia="0.00147 0.00134 0.00043 0 0 -0.00031"/>
+                  <joint name="left_roll_joint_6" axis="0 0 1" range="-1.047 1.047"/>
+                  <geom class="gemo_visual" type="mesh" mesh="mesh_l_roll_6" rgba="0 0 1 1"/>
+                  <body name="leg_lfoot_link" pos="0 0.125 0.115" euler="1.5708 0 0">
+                    <inertial pos="0 0 0" mass="0.0001" fullinertia="0.000001 0.000001 0.000001 0 0 0"/>
+                    <geom class="gemo_collision" type="box" size="0.06 0.1275 0.015" pos="0 0 0.025" rgba="0 1 0 1"/>
+                  </body>
+                </body>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+
+
+
+
+
+    </body><!-- /base_link -->
+  </worldbody>
+
+  <!-- <actuator>
+    <motor name="leg_r1_motor" joint="right_roll_joint_1"/>
+    <motor name="leg_r2_motor" joint="right_thigh_joint_2"/>
+    <motor name="leg_r3_motor" joint="right_pitch_joint_3"/>
+    <motor name="leg_r4_motor" joint="right_pitch_joint_4"/>
+    <motor name="leg_r5_motor" joint="right_pitch_joint_5"/>
+    <motor name="leg_r6_motor" joint="right_roll_joint_6"/>
+
+    <motor name="leg_l1_motor" joint="left_roll_joint_1"/>
+    <motor name="leg_l2_motor" joint="left_thigh_joint_2"/>
+    <motor name="leg_l3_motor" joint="left_pitch_joint_3"/>
+    <motor name="leg_l4_motor" joint="left_pitch_joint_4"/>
+    <motor name="leg_l5_motor" joint="left_pitch_joint_5"/>
+    <motor name="leg_l6_motor" joint="left_roll_joint_6"/>
+    
+    
+  </actuator> -->
+
+
+  <actuator>
+    <!-- Right Leg Actuators -->
+    <position name="act_right_roll_joint_1"  joint="right_roll_joint_1"  ctrlrange="-1.57 1.57"   kp="50.0" kv="0.3" />
+    <position name="act_right_thigh_joint_2" joint="right_thigh_joint_2" ctrlrange="-1.047 1.047" kp="50.0" kv="0.3" />
+    <position name="act_right_pitch_joint_3" joint="right_pitch_joint_3" ctrlrange="-2.093 1.047" kp="50.0" kv="0.3" />
+    <position name="act_right_pitch_joint_4" joint="right_pitch_joint_4" ctrlrange="0 1.047"      kp="50.0" kv="0.3" />
+    <position name="act_right_pitch_joint_5" joint="right_pitch_joint_5" ctrlrange="-1.047 1.047" kp="50.0" kv="0.3" />
+    <position name="act_right_roll_joint_6"  joint="right_roll_joint_6"  ctrlrange="-1.047 1.047" kp="50.0" kv="0.3" />
+    <position name="act_left_roll_joint_1"   joint="left_roll_joint_1"   ctrlrange="-1.57 1.57"   kp="50.0" kv="0.3" />
+    <position name="act_left_thigh_joint_2"  joint="left_thigh_joint_2"  ctrlrange="-1.047 1.047" kp="50.0" kv="0.3" />
+    <position name="act_left_pitch_joint_3"  joint="left_pitch_joint_3"  ctrlrange="-2.093 1.047" kp="50.0" kv="0.3" />
+    <position name="act_left_pitch_joint_4"  joint="left_pitch_joint_4"  ctrlrange="0 1.047"      kp="50.0" kv="0.3" />
+    <position name="act_left_pitch_joint_5"  joint="left_pitch_joint_5"  ctrlrange="-1.047 1.047" kp="50.0" kv="0.3" />
+    <position name="act_left_roll_joint_6"   joint="left_roll_joint_6"   ctrlrange="-1.047 1.047" kp="50.0" kv="0.3" />
+  </actuator>
+
+
+  <sensor>
+    <actuatorfrc name="sen_right_roll_joint_1_trq"  actuator="act_right_roll_joint_1"/>
+    <actuatorfrc name="sen_right_thigh_joint_2_trq" actuator="act_right_thigh_joint_2"/>
+    <actuatorfrc name="sen_right_pitch_joint_3_trq" actuator="act_right_pitch_joint_3"/>
+    <actuatorfrc name="sen_right_pitch_joint_4_trq" actuator="act_right_pitch_joint_4"/>
+    <actuatorfrc name="sen_right_pitch_joint_5_trq" actuator="act_right_pitch_joint_5"/>
+    <actuatorfrc name="sen_right_roll_joint_6_trq"  actuator="act_right_roll_joint_6"/>
+
+    <actuatorfrc name="sen_left_roll_joint_1_trq"   actuator="act_left_roll_joint_1"/>
+    <actuatorfrc name="sen_left_thigh_joint_2_trq"  actuator="act_left_thigh_joint_2"/>
+    <actuatorfrc name="sen_left_pitch_joint_3_trq"  actuator="act_left_pitch_joint_3"/>
+    <actuatorfrc name="sen_left_pitch_joint_4_trq"  actuator="act_left_pitch_joint_4"/>
+    <actuatorfrc name="sen_left_pitch_joint_5_trq"  actuator="act_left_pitch_joint_5"/>
+    <actuatorfrc name="sen_left_roll_joint_6_trq"   actuator="act_left_roll_joint_6"/>
+  </sensor>
+</mujoco>

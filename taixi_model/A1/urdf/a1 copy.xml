@@ -1,0 +1,368 @@
+<!-- ============================================================
+  MuJoCo XML for Unitree A1 (Biped Configuration)
+  Converted from a1.urdf (SolidWorks export)
+
+  Legs: 2 (right + left), 6 DOF per leg = 12 actuated joints
+  Sensors: joint encoders, IMU, foot contact, actuator force
+  Actuators: position-controlled PD motors on all revolute joints
+============================================================ -->
+
+<mujoco model="a1">
+
+  <!-- ========== Compiler & Options ========== -->
+  <compiler angle="radian" meshdir="../meshes" autolimits="true" inertiafromgeom="false"/>
+
+
+  <!-- <option timestep="0.001" gravity="0 0 -9.81" integrator="implicit" ...> -->
+
+  <option timestep="0.005" gravity="0 0 -9.81" integrator="implicit"
+          cone="pyramidal" impratio="10">
+    <flag contact="enable" gravity="enable"/>
+  </option>
+
+  <size nconmax="200" njmax="300" nstack="300000"/>
+
+  <visual>
+    <map znear="0.01" zfar="100" force="0.1" stiffness="1000"/>
+    <quality shadowsize="2048"/>
+    <global offwidth="800" offheight="600"/>
+  </visual>
+
+  <statistic center="0 0 0.3" extent="1.0"/>
+
+  <!-- ========== Defaults ========== -->
+  <default>
+    <!-- Joint defaults -->
+    <joint limited="true" damping="0.0" armature="0.00"/>
+    <!-- Geom defaults -->
+    <!-- <geom friction="0.8 0.5 0.1" solref="0.02 1" solimp="0.9 0.99 0.001"
+          condim="3" density="1000"/> -->
+    <!-- Actuator defaults -->
+    <position ctrllimited="true" forcelimited="true" kp="50.0" kv="6.0"
+              forcerange="-200.0 200.0"/>
+
+    <!-- Visual-only mesh geoms (no collision) -->
+    <default class="visual">
+      <geom type="mesh" contype="0" conaffinity="0" group="1"/>
+    </default>
+
+    <!-- Foot contact geoms -->
+    <default class="foot">
+      <!-- <geom friction="1.5 0.5 0.01" solref="0.005 1" solimp="0.9 0.95 0.01"
+        condim="3" priority="1" margin="0.002"/> -->
+    </default>
+
+    <!-- Body collision primitives -->
+    <default class="body_col">
+      <geom type="box" group="3" rgba="0.6 0.6 0.6 0.5"/>
+    </default>
+  </default>
+
+  <!-- ========== Assets (STL Meshes) ========== -->
+  <asset>
+    <mesh name="mesh_base"        file="base_link.STL"/>
+    <mesh name="mesh_r_roll_1"    file="right_roll_link_1.STL"/>
+    <mesh name="mesh_r_thigh_2"   file="right_thigh_link_2.STL"/>
+    <mesh name="mesh_r_pitch_3"   file="right_pitch_link_3.STL"/>
+    <mesh name="mesh_r_pitch_4"   file="right_pitch_link_4.STL"/>
+    <mesh name="mesh_r_pitch_5"   file="right_pitch_link_5.STL"/>
+    <mesh name="mesh_r_roll_6"    file="right_roll_link_6.STL"/>
+    <mesh name="mesh_l_roll_1"    file="left_roll_link_1.STL"/>
+    <mesh name="mesh_l_thigh_2"   file="left_thigh_link_2.STL"/>
+    <mesh name="mesh_l_pitch_3"   file="left_pitch_link_3.STL"/>
+    <mesh name="mesh_l_pitch_4"   file="left_pitch_link_4.STL"/>
+    <mesh name="mesh_l_pitch_5"   file="left_pitch_link_5.STL"/>
+    <mesh name="mesh_l_roll_6"    file="left_roll_link_6.STL"/>
+  </asset>
+
+  <asset>
+      <texture name='texture_plane' type='2d' builtin='checker' rgb1='0.2745 0.5098 0.7059' rgb2='0.5294 0.8078 0.9804' width='128' height='128'/>
+      <material name='material_plane' reflectance='0.0' texture='texture_plane' texrepeat='1 1' texuniform='true'/>
+      <material name="gray" rgba="0.5 0.5 0.5 1"/>
+      <material name="blue" rgba="0 0 1 1"/>
+      <material name="red" rgba="1 0 0 1"/>
+      <material name="green" rgba="0 1 0 1"/>
+  </asset>
+
+  <!-- ========== Worldbody ========== -->
+  <worldbody>
+    <!-- Lighting -->
+    <light directional="true" diffuse="0.7 0.7 0.7" specular="0.2 0.2 0.2"
+           pos="1.5 1.5 2.0" dir="-1 -1 -2"/>
+    <light directional="true" diffuse="0.3 0.3 0.3" specular="0.1 0.1 0.1"
+           pos="-0.5 -0.5 1.0" dir="0.5 0.5 -1"/>
+
+    <!-- Ground plane -->
+    <geom name="ground" type="plane" conaffinity="2" size="100 100 .2" material="material_plane"/>
+
+    <!-- ============================================================
+         BASE LINK
+         ============================================================ -->
+    <body name="base_link" pos="0 0 1.1">
+      <!-- Free joint: 6-DOF floating base -->
+      <freejoint name="base_free"/>
+
+      <!-- Inertial: mass=1.48, CoM at (0.12, 0, 0.33) -->
+      <inertial pos="0.12 0 0.33" mass="1.48"
+                fullinertia="0.5 0.53 0.06 0 -0.12 0"/>
+
+      <!-- Visual mesh -->
+      <geom class="visual" mesh="mesh_base" rgba="1 0 0 1"/>
+
+      <!-- Collision: box 0.4×0.3×1.5 at (0.2, 0, 0.75) -->
+      <geom class="body_col" size="0.2 0.15 0.75" pos="0.2 0 0.75"/>
+
+      <!-- IMU site -->
+      <site name="imu_site" pos="0 0 0" size="0.01"/>
+
+      <!-- ============================================================
+           RIGHT LEG  (6 DOF: Roll → Thigh → Pitch3 → Pitch4 → Pitch5 → Roll6 → Foot)
+           ============================================================ -->
+
+      <!-- Right Hip Roll Link 1 -->
+      <body name="right_roll_link_1" pos="0.005 -0.075 0" euler="0 1.5708 0">
+        <inertial pos="0.05697 -0.10361 0.0902" mass="0.34867"
+                  fullinertia="0.00204 0.00291 0.00223 0.00049 -0.00086 0.00073"/>
+        <joint name="right_roll_joint_1" axis="0 0 1" range="-1.57 1.57"/>
+        <geom class="visual" mesh="mesh_r_roll_1"/>
+
+        <!-- Right Thigh Link 2 -->
+        <body name="right_thigh_link_2" pos="0.083546 -0.12797 0.159" euler="1.5708 -1.5708 0">
+          <inertial pos="0.00843 -0.00006 -0.04551" mass="0.46018"
+                    fullinertia="0.00035 0.00023 0.00016 0 0 0"/>
+          <joint name="right_thigh_joint_2" axis="0 0 1" range="-1.047 1.047"/>
+          <geom class="visual" mesh="mesh_r_thigh_2"/>
+
+          <!-- Right Calf Link 3 -->
+          <body name="right_pitch_link_3" pos="0.022999 -0.00016171 -0.0455" euler="0 -1.5708 0">
+            <inertial pos="-0.17566 0.00359 0.01324" mass="0.81621"
+                      fullinertia="0.00052 0.01191 0.01225 -0.00055 0.00068 0.00004"/>
+            <joint name="right_pitch_joint_3" axis="0 0 1" range="-2.093 1.047"/>
+            <geom class="visual" mesh="mesh_r_pitch_3"/>
+
+            <!-- Right Calf Link 4 -->
+            <body name="right_pitch_link_4" pos="-0.39999 -0.0025996 0.0165" euler="0 0 0">
+              <inertial pos="-0.14741 -0.00155 0.00861" mass="0.10574"
+                        fullinertia="0.00001 0.0018 0.0018 -0.00002 0.00001 0"/>
+              <joint name="right_pitch_joint_4" axis="0 0 1" range="0 1.047" />
+              <geom class="visual" mesh="mesh_r_pitch_4"/>
+
+              <!-- Right Calf Link 5 -->
+              <body name="right_pitch_link_5" pos="-0.39198 -0.0041092 0.005" euler="0 0 0">
+                <inertial pos="-0.00085 -0.04624 0.02748" mass="0.04908"
+                          fullinertia="0.00011 0.00007 0.00005 0 0 0.00004"/>
+                <joint name="right_pitch_joint_5" axis="0 0 1" range="-1.047 1.047"/>
+                <geom class="visual" mesh="mesh_r_pitch_5"/>
+
+                <!-- Right Ankle Roll Link 6 -->
+                <body name="right_roll_link_6" pos="-0.0014433 -0.078215 0.085" euler="-1.5708 0 1.5708">
+                  <inertial pos="0.00047 0.08668 0.06284" mass="0.21281"
+                            fullinertia="0.00147 0.00134 0.00043 0 0 -0.00031"/>
+                  <joint name="right_roll_joint_6" axis="0 0 1" range="-1.047 1.047"/>
+                  <!-- <geom class="visual" mesh="mesh_r_roll_6" rgba="0 0 1 1"/> -->
+
+
+                  <!-- Right Foot (Fixed) -->
+                  <body name="leg_rfoot_link" pos="0 0.125 0.115" euler="1.5708 0 0">
+                    <inertial pos="0 0 0" mass="0.0001"
+                              fullinertia="0.000001 0.000001 0.000001 0 0 0"/>
+                    <!-- Foot collision: box 0.12×0.255×0.002 at (0, 0, 0.0125) -->
+                    <geom class="foot" type="box" size="0.06 0.1275 0.015" pos="0 0 0.025" rgba="0.3 0.3 0.35 1"/>
+                    <!-- Foot contact sites -->
+                    <!-- <site name="rfoot_site_1" pos="0.04 0.06 0" size="0.005"/>
+                    <site name="rfoot_site_2" pos="0.04 -0.06 0" size="0.005"/>
+                    <site name="rfoot_site_3" pos="-0.04 0.06 0" size="0.005"/>
+                    <site name="rfoot_site_4" pos="-0.04 -0.06 0" size="0.005"/> -->
+                  </body>
+                </body>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+
+      <!-- ============================================================
+           LEFT LEG  (6 DOF: Roll → Thigh → Pitch3 → Pitch4 → Pitch5 → Roll6 → Foot)
+           ============================================================ -->
+
+      <!-- Left Hip Roll Link 1 -->
+      <body name="left_roll_link_1" pos="0 0.075 0" euler="0 1.5708 0">
+        <inertial pos="0.05693 0.10363 0.0952" mass="0.34867"
+                  fullinertia="0.00204 0.00291 0.00223 -0.00049 -0.00086 -0.00073"/>
+        <joint name="left_roll_joint_1" axis="0 0 1" range="-1.57 1.57"/>
+        <geom class="visual" mesh="mesh_l_roll_1"/>
+
+        <!-- Left Thigh Link 2 -->
+        <body name="left_thigh_link_2" pos="0.0835 0.128 0.164" euler="1.5708 -1.5708 0">
+          <inertial pos="-0.00843 -0.00038 -0.04549" mass="0.46018"
+                    fullinertia="0.00034 0.00023 0.00016 0.00001 0 0"/>
+          <joint name="left_thigh_joint_2" axis="0 0 1" range="-1.047 1.047"/>
+          <geom class="visual" mesh="mesh_l_thigh_2"/>
+
+          <!-- Left Calf Link 3 -->
+          <body name="left_pitch_link_3" pos="-0.022975 -0.0010661 -0.0455" euler="0 -1.5708 0">
+            <inertial pos="-0.17567 0.00217 -0.01324" mass="0.81621"
+                      fullinertia="0.00053 0.0119 0.01225 -0.00064 -0.00068 -0.00005"/>
+            <joint name="left_pitch_joint_3" axis="0 0 1" range="-2.093 1.047"/>
+            <geom class="visual" mesh="mesh_l_pitch_3"/>
+
+            <!-- Left Calf Link 4 -->
+            <body name="left_pitch_link_4" pos="-0.39996 -0.0058275 -0.0165" euler="0 0 0">
+              <inertial pos="-0.14741 0.00138 -0.00861" mass="0.10574"
+                        fullinertia="0.00001 0.0018 0.0018 0.00002 -0.00001 0"/>
+              <joint name="left_pitch_joint_4" axis="0 0 1" range="0 1.047"/>
+              <geom class="visual" mesh="mesh_l_pitch_4"/>
+
+              <!-- Left Calf Link 5 -->
+              <body name="left_pitch_link_5" pos="-0.39198 0.0036803 -0.005" euler="0 0 0">
+                <inertial pos="-0.00024 -0.04625 -0.02748" mass="0.04908"
+                          fullinertia="0.00011 0.00007 0.00005 0 0 -0.00004"/>
+                <joint name="left_pitch_joint_5" axis="0 0 1" range="-1.047 1.047"/>
+                <geom class="visual" mesh="mesh_l_pitch_5"/>
+
+                <!-- Left Ankle Roll Link 6 -->
+                <body name="left_roll_link_6" pos="-0.00035346 -0.068228 -0.085" euler="-1.5708 0 1.5708">
+                  <inertial pos="0.00067 0.08724 0.05336" mass="0.21281"
+                            fullinertia="0.00147 0.00134 0.00043 0 0 -0.00031"/>
+                  <joint name="left_roll_joint_6" axis="0 0 1" range="-1.047 1.047"/>
+                  <!-- <geom class="visual" mesh="mesh_l_roll_6" rgba="0 0 1 1"/> -->
+
+                  <!-- Left Foot (Fixed) -->
+                  <body name="leg_lfoot_link" pos="0 0.125 0.115" euler="1.5708 0 0">
+                    <inertial pos="0 0 0" mass="0.0001"
+                              fullinertia="0.000001 0.000001 0.000001 0 0 0"/>
+                    <!-- Foot collision: box 0.12×0.255×0.002 at (0, 0, 0.0125) -->
+                    <geom class="foot" type="box" size="0.06 0.1275 0.015" pos="0 0 0.025" rgba="0.3 0.3 0.35 1"/>
+                    <!-- Foot contact sites -->
+                    <!-- <site name="lfoot_site_1" pos="0.04 0.06 0" size="0.005"/>
+                    <site name="lfoot_site_2" pos="0.04 -0.06 0" size="0.005"/>
+                    <site name="lfoot_site_3" pos="-0.04 0.06 0" size="0.005"/>
+                    <site name="lfoot_site_4" pos="-0.04 -0.06 0" size="0.005"/> -->
+                  </body>
+                </body>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+
+    </body><!-- /base_link -->
+  </worldbody>
+
+  <!-- ========== Actuators ==========
+    Position-controlled PD actuators for all 12 revolute joints.
+    Control signal = target joint position (rad).
+    Force = kp * (ctrl - q) - kv * qvel
+    ctrlrange matches joint mechanical limits.
+ -->
+  <actuator>
+    <!-- Right Leg Actuators -->
+    <position name="act_right_roll_joint_1"  joint="right_roll_joint_1"  ctrlrange="-1.57 1.57"  />
+    <position name="act_right_thigh_joint_2" joint="right_thigh_joint_2" ctrlrange="-1.047 1.047"/>
+    <position name="act_right_pitch_joint_3" joint="right_pitch_joint_3" ctrlrange="-2.093 1.047"/>
+    <position name="act_right_pitch_joint_4" joint="right_pitch_joint_4" ctrlrange="0 1.047"     />
+    <position name="act_right_pitch_joint_5" joint="right_pitch_joint_5" ctrlrange="-1.047 1.047"/>
+    <position name="act_right_roll_joint_6"  joint="right_roll_joint_6"  ctrlrange="-1.047 1.047"/>
+
+    <!-- Left Leg Actuators -->
+    <position name="act_left_roll_joint_1"   joint="left_roll_joint_1"   ctrlrange="-1.57 1.57"   />
+    <position name="act_left_thigh_joint_2"  joint="left_thigh_joint_2"  ctrlrange="-1.047 1.047" />
+    <position name="act_left_pitch_joint_3"  joint="left_pitch_joint_3"  ctrlrange="-2.093 1.047" />
+    <position name="act_left_pitch_joint_4"  joint="left_pitch_joint_4"  ctrlrange="0 1.047"      />
+    <position name="act_left_pitch_joint_5"  joint="left_pitch_joint_5"  ctrlrange="-1.047 1.047" />
+    <position name="act_left_roll_joint_6"   joint="left_roll_joint_6"   ctrlrange="-1.047 1.047" />
+  </actuator>
+
+  <!-- ========== Sensors ==========
+    Comprehensive sensor suite for locomotion control:
+    - Joint encoders: position + velocity (12 each)
+    - Actuator force: motor torque (12)
+    - IMU: orientation, angular velocity, linear acceleration (base_link)
+    - Foot contact: touch sensors on foot sites (8)
+    - Foot force/torque: 3-axis force sensors between foot and body (2)
+    - Global: base position, body COM
+ -->
+  <sensor>
+    <!-- ===== Joint Position Sensors (encoders) ===== -->
+    <jointpos name="sen_right_roll_joint_1_pos"  joint="right_roll_joint_1"/>
+    <jointpos name="sen_right_thigh_joint_2_pos" joint="right_thigh_joint_2"/>
+    <jointpos name="sen_right_pitch_joint_3_pos" joint="right_pitch_joint_3"/>
+    <jointpos name="sen_right_pitch_joint_4_pos" joint="right_pitch_joint_4"/>
+    <jointpos name="sen_right_pitch_joint_5_pos" joint="right_pitch_joint_5"/>
+    <jointpos name="sen_right_roll_joint_6_pos"  joint="right_roll_joint_6"/>
+
+    <jointpos name="sen_left_roll_joint_1_pos"   joint="left_roll_joint_1"/>
+    <jointpos name="sen_left_thigh_joint_2_pos"  joint="left_thigh_joint_2"/>
+    <jointpos name="sen_left_pitch_joint_3_pos"  joint="left_pitch_joint_3"/>
+    <jointpos name="sen_left_pitch_joint_4_pos"  joint="left_pitch_joint_4"/>
+    <jointpos name="sen_left_pitch_joint_5_pos"  joint="left_pitch_joint_5"/>
+    <jointpos name="sen_left_roll_joint_6_pos"   joint="left_roll_joint_6"/>
+
+    <!-- ===== Joint Velocity Sensors ===== -->
+    <jointvel name="sen_right_roll_joint_1_vel"  joint="right_roll_joint_1"/>
+    <jointvel name="sen_right_thigh_joint_2_vel" joint="right_thigh_joint_2"/>
+    <jointvel name="sen_right_pitch_joint_3_vel" joint="right_pitch_joint_3"/>
+    <jointvel name="sen_right_pitch_joint_4_vel" joint="right_pitch_joint_4"/>
+    <jointvel name="sen_right_pitch_joint_5_vel" joint="right_pitch_joint_5"/>
+    <jointvel name="sen_right_roll_joint_6_vel"  joint="right_roll_joint_6"/>
+
+    <jointvel name="sen_left_roll_joint_1_vel"   joint="left_roll_joint_1"/>
+    <jointvel name="sen_left_thigh_joint_2_vel"  joint="left_thigh_joint_2"/>
+    <jointvel name="sen_left_pitch_joint_3_vel"  joint="left_pitch_joint_3"/>
+    <jointvel name="sen_left_pitch_joint_4_vel"  joint="left_pitch_joint_4"/>
+    <jointvel name="sen_left_pitch_joint_5_vel"  joint="left_pitch_joint_5"/>
+    <jointvel name="sen_left_roll_joint_6_vel"   joint="left_roll_joint_6"/>
+
+    <!-- ===== Actuator Force Sensors (motor torque) ===== -->
+    <actuatorfrc name="sen_right_roll_joint_1_trq"  actuator="act_right_roll_joint_1"/>
+    <actuatorfrc name="sen_right_thigh_joint_2_trq" actuator="act_right_thigh_joint_2"/>
+    <actuatorfrc name="sen_right_pitch_joint_3_trq" actuator="act_right_pitch_joint_3"/>
+    <actuatorfrc name="sen_right_pitch_joint_4_trq" actuator="act_right_pitch_joint_4"/>
+    <actuatorfrc name="sen_right_pitch_joint_5_trq" actuator="act_right_pitch_joint_5"/>
+    <actuatorfrc name="sen_right_roll_joint_6_trq"  actuator="act_right_roll_joint_6"/>
+
+    <actuatorfrc name="sen_left_roll_joint_1_trq"   actuator="act_left_roll_joint_1"/>
+    <actuatorfrc name="sen_left_thigh_joint_2_trq"  actuator="act_left_thigh_joint_2"/>
+    <actuatorfrc name="sen_left_pitch_joint_3_trq"  actuator="act_left_pitch_joint_3"/>
+    <actuatorfrc name="sen_left_pitch_joint_4_trq"  actuator="act_left_pitch_joint_4"/>
+    <actuatorfrc name="sen_left_pitch_joint_5_trq"  actuator="act_left_pitch_joint_5"/>
+    <actuatorfrc name="sen_left_roll_joint_6_trq"   actuator="act_left_roll_joint_6"/>
+
+    <!-- ===== IMU Sensors (on base_link) ===== -->
+    <!-- Orientation quaternion (w x y z) -->
+    <framequat name="sen_imu_quat" objtype="body" objname="base_link"/>
+    <!-- Angular velocity in body frame (rad/s) -->
+    <gyro name="sen_imu_gyro" site="imu_site"/>
+    <!-- Linear acceleration in body frame (m/s²) — includes gravity -->
+    <framelinacc name="sen_imu_linacc" objtype="body" objname="base_link"/>
+
+    <!-- ===== Global Position / Odometry ===== -->
+    <!-- Base position in world frame -->
+    <framepos name="sen_base_pos" objtype="body" objname="base_link"/>
+    <!-- Base linear velocity in world frame -->
+    <subtreelinvel name="sen_base_linvel" body="base_link"/>
+
+    <!-- ===== Foot Contact Force Sensors ===== -->
+    <!-- Right foot touch sensors -->
+    <!-- <touch name="sen_rfoot_touch_1" site="rfoot_site_1"/>
+    <touch name="sen_rfoot_touch_2" site="rfoot_site_2"/>
+    <touch name="sen_rfoot_touch_3" site="rfoot_site_3"/>
+    <touch name="sen_rfoot_touch_4" site="rfoot_site_4"/> -->
+
+    <!-- Left foot touch sensors -->
+    <!-- <touch name="sen_lfoot_touch_1" site="lfoot_site_1"/>
+    <touch name="sen_lfoot_touch_2" site="lfoot_site_2"/>
+    <touch name="sen_lfoot_touch_3" site="lfoot_site_3"/>
+    <touch name="sen_lfoot_touch_4" site="lfoot_site_4"/> -->
+
+    <!-- ===== Foot 3-Axis Force/Torque Sensors ===== -->
+    <!-- Between foot link and its parent (ankle) — measures contact wrench -->
+    <!-- <force name="sen_rfoot_force" site="rfoot_site_1" noise="0.01"/>
+    <force name="sen_lfoot_force" site="lfoot_site_1" noise="0.01"/> -->
+
+    <!-- Body center of mass position + velocity (for whole-robot state) -->
+    <subtreecom name="sen_body_com" body="base_link"/>
+    <subtreelinvel name="sen_body_com_vel" body="base_link"/>
+  </sensor>
+
+</mujoco>

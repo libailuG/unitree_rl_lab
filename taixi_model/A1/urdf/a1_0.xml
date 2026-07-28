@@ -1,0 +1,144 @@
+<mujoco model="a1">
+
+
+    <compiler angle="radian" meshdir="../meshes" />
+    
+    <option timestep="0.002">
+      <!-- <flag contactparam="enable"/> -->
+    </option>
+  
+    <default>
+      <joint damping="2.0"/>
+      <!-- <geom contype="1" conaffinity="1" condim="3" rgba="0.5 0.5 0.5 1"/> -->
+      <motor ctrlrange="-1 1" ctrllimited="false"/>
+    </default>
+
+    <default>
+        <!-- Joint defaults -->
+        <joint limited="true" damping="0.5" armature="0.01"/>
+        <!-- Geom defaults -->
+        <geom friction="0.8 0.5 0.1" solref="0.02 1" solimp="0.9 0.99 0.001"
+            condim="3" density="1000"/>
+        <!-- Actuator defaults -->
+        <position kp="55" kv="6" ctrllimited="true" forcelimited="true"
+                forcerange="-33.5 33.5"/>
+
+        <!-- Visual-only mesh geoms (no collision) -->
+        <default class="visual">
+        <geom type="mesh" contype="0" conaffinity="0" group="1"/>
+        </default>
+
+        <!-- Foot contact geoms -->
+        <default class="foot">
+        <geom friction="1.5 0.5 0.01" solref="0.01 1" solimp="0.95 0.99 0.001"
+                condim="4" priority="1"/>
+        </default>
+
+        <!-- Body collision primitives -->
+        <default class="body_col">
+        <geom type="box" group="3" rgba="0.6 0.6 0.6 0.5"/>
+        </default>
+    </default>
+
+
+    <asset>
+        <texture name='texture_plane' type='2d' builtin='checker' rgb1='0.2745 0.5098 0.7059' rgb2='0.5294 0.8078 0.9804' width='128' height='128'/>
+        <material name='material_plane' reflectance='0.0' texture='texture_plane' texrepeat='1 1' texuniform='true'/>
+        <material name="gray" rgba="0.5 0.5 0.5 1"/>
+        <material name="blue" rgba="0 0 1 1"/>
+        <material name="red" rgba="1 0 0 1"/>
+        <material name="green" rgba="0 1 0 1"/>
+    </asset>
+
+    <asset>
+        <mesh name="mesh_base"        file="base_link.STL"/>
+        <mesh name="mesh_r_roll_1"    file="right_roll_link_1.STL"/>
+        <mesh name="mesh_r_thigh_2"   file="right_thigh_link_2.STL"/>
+        <mesh name="mesh_r_pitch_3"   file="right_pitch_link_3.STL"/>
+        <mesh name="mesh_r_pitch_4"   file="right_pitch_link_4.STL"/>
+        <mesh name="mesh_r_pitch_5"   file="right_pitch_link_5.STL"/>
+        <mesh name="mesh_r_roll_6"    file="right_roll_link_6.STL"/>
+        <mesh name="mesh_l_roll_1"    file="left_roll_link_1.STL"/>
+        <mesh name="mesh_l_thigh_2"   file="left_thigh_link_2.STL"/>
+        <mesh name="mesh_l_pitch_3"   file="left_pitch_link_3.STL"/>
+        <mesh name="mesh_l_pitch_4"   file="left_pitch_link_4.STL"/>
+        <mesh name="mesh_l_pitch_5"   file="left_pitch_link_5.STL"/>
+        <mesh name="mesh_l_roll_6"    file="left_roll_link_6.STL"/>
+    </asset>
+
+    <worldbody>
+        <geom name="floor" type="plane" conaffinity="2" size="100 100 .2" material="material_plane"/>
+        <light directional="true" ambient=".3 .3 .3" pos="30 30 30" dir="0 -.5 -1"
+                    diffuse=".5 .5 .5" specular=".5 .5 .5" />
+        <body name="base_link" pos="0 0 1.5">
+            <!-- Free joint: 6-DOF floating base -->
+            <!-- <freejoint name="base_free"/> -->
+
+            <!-- Inertial: mass=1.48, CoM at (0.12, 0, 0.33) -->
+            <inertial pos="0.12 0 0.33" mass="1.48"
+                        fullinertia="0.5 0.53 0.06 0 -0.12 0"/>
+
+            <!-- Visual mesh -->
+            <geom class="visual" mesh="mesh_base"/>
+
+            <!-- Collision: box 0.4×0.3×1.5 at (0.2, 0, 0.75) -->
+            <geom class="body_col" size="0.2 0.15 0.75" pos="0.2 0 0.75"/>
+
+            <!-- IMU site -->
+            <site name="imu_site" pos="0 0 0" size="0.01"/>
+            <!-- Right Hip Roll Link 1 -->
+            <body name="right_roll_link_1" pos="0.005 -0.075 0" euler="0 1.5708 0">
+                <inertial pos="0.05697 -0.10361 0.0902" mass="0.34867"
+                        fullinertia="0.00204 0.00291 0.00223 0.00049 -0.00086 0.00073"/>
+                <geom class="visual" mesh="mesh_r_roll_1"/>
+                <joint name="right_roll_joint_1" axis="0 0 1" range="-1.57 1.57"/>
+                <body name="right_thigh_link_2" pos="0.083546 -0.12797 0.159" euler="1.5708 -1.5708 0">
+                    <inertial pos="0.00843 -0.00006 -0.04551" mass="0.46018"
+                                fullinertia="0.00035 0.00023 0.00016 0 0 0"/>
+                    <geom class="visual" mesh="mesh_r_thigh_2"/>
+                    <joint name="right_thigh_joint_2" axis="0 0 1" range="-1.047 1.047"/>
+                    <body name="right_pitch_link_3" pos="0.022999 -0.00016171 -0.0455" euler="0 -1.5708 0">
+                        <inertial pos="-0.17566 0.00359 0.01324" mass="0.81621"
+                                fullinertia="0.00052 0.01191 0.01225 -0.00055 0.00068 0.00004"/>
+                        <joint name="right_pitch_joint_3" axis="0 0 1" range="-2.093 1.047"/>
+                        <geom class="visual" mesh="mesh_r_pitch_3"/>
+                        <body name="right_pitch_link_4" pos="-0.39999 -0.0025996 0.0165" euler="0 0 0">
+                            <inertial pos="-0.14741 -0.00155 0.00861" mass="0.10574"
+                                        fullinertia="0.00001 0.0018 0.0018 -0.00002 0.00001 0"/>
+                            <joint name="right_pitch_joint_4" axis="0 0 1" range="0 1.047"/>
+                            <geom class="visual" mesh="mesh_r_pitch_4"/>
+                            <body name="right_pitch_link_5" pos="-0.39198 -0.0041092 0.005" euler="0 0 0">
+                                <inertial pos="-0.00085 -0.04624 0.02748" mass="0.04908"
+                                        fullinertia="0.00011 0.00007 0.00005 0 0 0.00004"/>
+                                <joint name="right_pitch_joint_5" axis="0 0 1" range="-1.047 1.047"/>
+                                <geom class="visual" mesh="mesh_r_pitch_5"/>
+                                <geom class="body_col" size="0.015 0.015 0.04"/>
+                                <body name="right_roll_link_6" pos="-0.0014433 -0.078215 0.085" euler="-1.5708 1.5708 0">
+                                    <inertial pos="0.00047 0.08668 0.06284" mass="0.21281"
+                                                fullinertia="0.00147 0.00134 0.00043 0 0 -0.00031"/>
+                                    <joint name="right_roll_joint_6" axis="0 0 1" range="-1.047 1.047"/>
+                                    <geom class="visual" mesh="mesh_r_roll_6"/>
+                                    <body name="leg_rfoot_link" pos="0 0.125 0.115" euler="1.5708 0 0">
+                                        <inertial pos="0 0 0" mass="0.0001"
+                                                fullinertia="0.000001 0.000001 0.000001 0 0 0"/>
+                                        <!-- Foot collision: box 0.12×0.255×0.002 at (0, 0, 0.0125) -->
+                                        <geom class="foot" type="box" size="0.06 0.1275 0.001"
+                                            pos="0 0 0.0125" rgba="0.3 0.3 0.35 1"/>
+                                        <!-- Foot contact sites -->
+                                        <site name="rfoot_site_1" pos="0.04 0.06 0" size="0.005"/>
+                                        <site name="rfoot_site_2" pos="0.04 -0.06 0" size="0.005"/>
+                                        <site name="rfoot_site_3" pos="-0.04 0.06 0" size="0.005"/>
+                                        <site name="rfoot_site_4" pos="-0.04 -0.06 0" size="0.005"/>
+                                    </body>
+                                </body>
+                            </body>
+                        </body>
+                    </body>
+                </body>
+            </body>
+        </body>
+
+    </worldbody>
+
+
+</mujoco>
