@@ -236,7 +236,7 @@ TAIXI_A2_ROUGH_CFG = UnitreeArticulationCfg(
         joint_pos={
             ".*hip_roll.*" : 0.0,
             ".*hip_yaw.*" : 0.0,
-            ".*hip_pitch.*" : -10.0/180.0*math.pi,
+            ".*hip_pitch.*" : -9.0/180.0*math.pi,
             ".*knee.*" : 20.0/180.0*math.pi,
             ".*ankle_pitch.*" : -10.0/180.0*math.pi,
             ".*ankle_roll.*" : 0.0,
