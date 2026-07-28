@@ -65,7 +65,7 @@
   <worldbody>
 
     <body name= "box" pos="0 0 0" euler="0 0 0">
-      <geom class="gemo_collision_box" type="box" size="0.2 0.2 0.1" pos="-1.0 0.7 0.1"/>
+      <geom class="gemo_collision_box" type="box" size="0.2 0.2 0.1" pos="-0.9 0.7 0.1"/>
     </body>
 
 
@@ -76,7 +76,7 @@
                     diffuse=".5 .5 .5" specular=".5 .5 .5" />
 
 
-    <body name="base_link" pos="0 0 1.0" euler="0 0 0">
+    <body name="base_link" pos="0 0 1.1" euler="0 0 0">
       <freejoint name="base_free"/>
       <inertial pos="-0.14464 0 0.63562" mass="1.6082" fullinertia="1.6349 1.6777 0.06302 0 0.2309 0"/>
       <geom class="gemo_visual" type="mesh" mesh="mesh_base" rgba="1 0 0 1"/>
@@ -133,7 +133,7 @@
                   <body name="leg_lfoot_link" pos="0.11 0.0 -0.125" euler="0 0 1.5708">
                     <inertial pos="0 0 0" mass="0.0001"
                               fullinertia="0.000001 0.000001 0.000001 0 0 0"/>
-                    <geom class="gemo_collision" type="box" size="0.06 0.1275 0.015" pos="0 0 0.025" rgba="0 1 0 1"/>
+                    <geom class="gemo_collision" type="box" size="0.06 0.1275 0.001" pos="0 0 0.0125" rgba="0 1 0 1"/>
                   </body>
                 </body>
               </body>
@@ -180,7 +180,7 @@
                   <body name="leg_rfoot_link" pos="0.11 0.0 -0.125" euler="0 0 1.5708">
                     <inertial pos="0 0 0" mass="0.0001"
                               fullinertia="0.000001 0.000001 0.000001 0 0 0"/>
-                    <geom class="gemo_collision" type="box" size="0.06 0.1275 0.015" pos="0 0 0.025" rgba="0 1 0 1"/>
+                    <geom class="gemo_collision" type="box" size="0.06 0.1275 0.001" pos="0 0 0.0125" rgba="0 1 0 1"/>
                   </body>
                 </body>
               </body>
@@ -210,7 +210,7 @@
     <!-- Right Leg Actuators -->
     <position name="act_right_hip_roll_joint"    joint="right_hip_roll_joint"    ctrlrange="-2.97 0.52"  kp="50.0" kv="0.3" />
     <position name="act_right_hip_yaw_joint"     joint="right_hip_yaw_joint"     ctrlrange="-2.76 2.76"  kp="50.0" kv="0.3" />
-    <position name="act_right_hip_pitch_joint"   joint="right_hip_pitch_joint"   ctrlrange="-2.53 2.88"  kp="50.0" kv="0.3" />
+    <position name="act_right_hip_pitch_joint"   joint="right_hip_pitch_joint"   ctrlrange="-2.53 2.88"  kp="50.0" kv="0.3" />  
     <position name="act_right_knee_joint"        joint="right_knee_joint"        ctrlrange="-0.09 2.88"  kp="50.0" kv="0.3" />
     <position name="act_right_ankle_pitch_joint" joint="right_ankle_pitch_joint" ctrlrange="-0.87 0.52"  kp="50.0" kv="0.3" />
     <position name="act_right_ankle_roll_joint"  joint="right_ankle_roll_joint"  ctrlrange="-0.26 0.26"   kp="50.0" kv="0.3" />

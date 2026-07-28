@@ -73,11 +73,11 @@ def main():
     #   → box world pos = robot_init + relative_offset = (-1.5, 0.4, 0.10)
 
     box_pos = (
-        -16.0 - 1.0,
+        -16.0 - 0.9,
         -16.0 + 0.7,
         0.1,     # = 1.05 + (-0.95) = 0.10
     )
-    # prim_path 放在 /World/ground 下，RayCaster 扫描 terrain 时自动覆盖
+    # prim_path 放在 /World/ground 下
     env_cfg.scene.terrain_box = RigidObjectCfg(
         prim_path="/World/ground/terrain_box",
         spawn=sim_utils.CuboidCfg(
@@ -143,8 +143,18 @@ def main():
         # Formula: height_scan = sensor_z - hit_z - offset(0.5), then clamp(-1, 1)
         if timestep % 100 == 0:
             # 打印机器人世界位置
-            root_pos = env.unwrapped.scene["robot"].data.root_pos_w[0]  # (x, y, z) env 0
+            robot_data = env.unwrapped.scene["robot"].data
+            root_pos = robot_data.root_pos_w[0]  # (x, y, z) env 0
             print(f"[Step {timestep}] robot world pos = ({root_pos[0]:.3f}, {root_pos[1]:.3f}, {root_pos[2]:.3f})")
+            # 打印关节角度 (deg)
+            joint_pos = robot_data.joint_pos[0]  # (12,) rad
+            joint_deg = torch.rad2deg(joint_pos)
+            deg_str = " ".join(f"{joint_deg[i]:7.2f}" for i in range(len(joint_deg)))
+            print(f"  joint pos (deg): [{deg_str}]")
+            # 打印关节输出扭矩 (Nm)
+            joint_trq = robot_data.applied_torque[0]  # (12,) Nm
+            trq_str = " ".join(f"{joint_trq[i]:7.2f}" for i in range(len(joint_trq)))
+            print(f"  joint trq (Nm) : [{trq_str}]")
 
             hs_data = env.unwrapped.scene["height_scanner"].data  # type: ignore[attr-defined]
             ray_hits = hs_data.ray_hits_w

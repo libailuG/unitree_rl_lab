@@ -538,6 +538,18 @@ def main():
             step_count += 1
             if step_count % 100 == 0:
                 n_lt, n_fw = heights_2d.shape
+                # 打印机器人世界位置
+                robot_pos = data.xpos[base_link_id]
+                print(f"[Step {step_count}] robot world pos = ({robot_pos[0]:.3f}, {robot_pos[1]:.3f}, {robot_pos[2]:.3f})")
+                # 打印关节角度 (deg)
+                mj_qpos = data.qpos[7:]  # MuJoCo 顺序, 弧度
+                joint_str = " ".join(f"{np.rad2deg(mj_qpos[i]):7.2f}" for i in range(len(mj_qpos)))
+                print(f"  joint pos (deg): [{joint_str}]")
+                # 打印关节输出扭矩 (Nm)
+                mj_trq = data.actuator_force  # MuJoCo actuator 顺序
+                trq_str = " ".join(f"{mj_trq[i]:7.2f}" for i in range(len(mj_trq)))
+                print(f"  joint trq (Nm) : [{trq_str}]")
+                # 打印 height_scanner 角点
                 print(height_scanner_obs[0],height_scanner_obs[16],height_scanner_obs[170],height_scanner_obs[186])
 
                 print(f"\n--- step {step_count} ---")
