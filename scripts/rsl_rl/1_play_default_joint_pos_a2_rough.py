@@ -42,7 +42,9 @@ import os
 import time
 import torch
 
+import isaaclab.sim as sim_utils
 import isaaclab_tasks  # noqa: F401
+from isaaclab.assets import RigidObjectCfg
 from isaaclab.envs import DirectMARLEnv, multi_agent_to_single_agent
 from isaaclab.utils.dict import print_dict
 
@@ -59,6 +61,37 @@ def main():
         num_envs=args_cli.num_envs,
         use_fabric=not args_cli.disable_fabric,
         entry_point_key="play_env_cfg_entry_point",
+    )
+
+    # ── 添加地形长方体 (与 a2_box.xml 对齐) ──
+    # a2_box.xml:
+    #   robot base_link @ world (0, 0, 1.0)
+    #   box geom @ world (-1.5, 0.4, 0.05), MuJoCo half-extents "0.2 0.2 0.1"
+    #   → box 相对于 robot 的偏移: (-1.5, 0.4, -0.95)
+    # Isaac Sim:
+    #   robot init_pos = (0, 0, 1.05)  (TAIXI_A2_ROUGH_CFG)
+    #   → box world pos = robot_init + relative_offset = (-1.5, 0.4, 0.10)
+
+    box_pos = (
+        -16.0 - 1.0,
+        -16.0 + 0.7,
+        0.1,     # = 1.05 + (-0.95) = 0.10
+    )
+    # prim_path 放在 /World/ground 下，RayCaster 扫描 terrain 时自动覆盖
+    env_cfg.scene.terrain_box = RigidObjectCfg(
+        prim_path="/World/ground/terrain_box",
+        spawn=sim_utils.CuboidCfg(
+            size=(0.4, 0.4, 0.2),  # 全尺寸 (MuJoCo half-extents × 2)
+            rigid_props=sim_utils.RigidBodyPropertiesCfg(kinematic_enabled=True),
+            collision_props=sim_utils.CollisionPropertiesCfg(),
+            visual_material=sim_utils.PreviewSurfaceCfg(diffuse_color=(1.0, 1.0, 0.0)),
+            physics_material=sim_utils.RigidBodyMaterialCfg(
+                static_friction=1.0,
+                dynamic_friction=1.0,
+            ),
+        ),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=box_pos),
+        collision_group=-1,
     )
 
     # create isaac environment
@@ -100,8 +133,19 @@ def main():
             # env stepping
             obs, _, _, _, _ = env.step(actions)
 
-        # print height_scanner four corner values every 100 steps
+        # compute and print height_scan four corner values every 100 steps
+        # height_scan = ObsTerm(
+        #     func=mdp_2.height_scan,
+        #     params={"sensor_cfg": SceneEntityCfg("height_scanner")},
+        #     noise=Unoise(n_min=-0.1, n_max=0.1),  # only applied when corruption enabled
+        #     clip=(-1.0, 1.0),
+        # )
+        # Formula: height_scan = sensor_z - hit_z - offset(0.5), then clamp(-1, 1)
         if timestep % 100 == 0:
+            # 打印机器人世界位置
+            root_pos = env.unwrapped.scene["robot"].data.root_pos_w[0]  # (x, y, z) env 0
+            print(f"[Step {timestep}] robot world pos = ({root_pos[0]:.3f}, {root_pos[1]:.3f}, {root_pos[2]:.3f})")
+
             hs_data = env.unwrapped.scene["height_scanner"].data  # type: ignore[attr-defined]
             ray_hits = hs_data.ray_hits_w
             if ray_hits is None:
@@ -112,18 +156,18 @@ def main():
                 nx = int(1.6 / 0.1) + 1  # 17
                 ny = int(1.0 / 0.1) + 1  # 11
                 if num_rays == nx * ny:
-                    # standard 17×11 grid, "xy" ordering
                     corner_idx = [0, nx - 1, (ny - 1) * nx, ny * nx - 1]  # [0, 16, 170, 186]
                 else:
-                    # fallback for unexpected grid size
                     corner_idx = [0, num_rays - 1, num_rays // 2 - 1, num_rays // 2]
-                # compute heights: sensor_height - hit_point_z
-                sensor_z = hs_data.pos_w[:, 2]                      # (num_envs,)
-                corner_hits_z = ray_hits[:, corner_idx, 2]           # (num_envs, 4)
-                heights = sensor_z.unsqueeze(1) - corner_hits_z      # (num_envs, 4)
-                print(f"[Step {timestep}] height_scanner @ {num_rays} rays:"
-                      f"  rear-right={heights[0, 0]:.4f}  front-right={heights[0, 1]:.4f}"
-                      f"  rear-left={heights[0, 2]:.4f}  front-left={heights[0, 3]:.4f}")
+                # height_scan formula: sensor_z - hit_z - 0.5, clamped to (-1, 1)
+                sensor_z = hs_data.pos_w[:, 2]                          # (num_envs,)
+                height_scan_full = sensor_z.unsqueeze(1) - ray_hits[..., 2] - 0.5  # (num_envs, 187)
+                height_scan_full = torch.clamp(height_scan_full, -1.0, 1.0)
+                print(corner_idx)
+                corner_vals = height_scan_full[:, corner_idx]           # (num_envs, 4)
+                print(f"[Step {timestep}] height_scan({num_rays} rays), clip=(-1,1):"
+                      f"  rear-right={corner_vals[0, 0]:.4f}  front-right={corner_vals[0, 1]:.4f}"
+                      f"  rear-left={corner_vals[0, 2]:.4f}  front-left={corner_vals[0, 3]:.4f}")
 
         timestep += 1
 

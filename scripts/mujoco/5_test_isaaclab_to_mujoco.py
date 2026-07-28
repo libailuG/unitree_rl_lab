@@ -123,7 +123,8 @@ mujoco 模型参数
 
 
 # 加载模型
-MODEL_PATH = "/home/libai/00_isaaclab/unitree_rl_lab/taixi_model/A2/urdf/a2_box.xml"
+MODEL_PATH = os.path.join(os.path.dirname(__file__), "../../taixi_model/A2/urdf/a2_box.xml")
+
 
 model = mujoco.MjModel.from_xml_path(MODEL_PATH)
 data = mujoco.MjData(model)
@@ -537,16 +538,9 @@ def main():
             step_count += 1
             if step_count % 100 == 0:
                 n_lt, n_fw = heights_2d.shape
-                corners = {
-                    "lt=0, fw=0":           heights_2d[0, 0],
-                    f"lt=0, fw={n_fw-1}":   heights_2d[0, n_fw - 1],
-                    f"lt={n_lt-1}, fw=0":   heights_2d[n_lt - 1, 0],
-                    f"lt={n_lt-1}, fw={n_fw-1}": heights_2d[n_lt - 1, n_fw - 1],
-                }
+                print(height_scanner_obs[0],height_scanner_obs[16],height_scanner_obs[170],height_scanner_obs[186])
 
                 print(f"\n--- step {step_count} ---")
-                for desc, val in corners.items():
-                    print(f"  [{desc}] = {val:.3f}")
                 print(f"------------------------------\n")
 
 

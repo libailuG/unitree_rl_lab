@@ -123,7 +123,8 @@ mujoco 模型参数
 
 
 # 加载模型
-MODEL_PATH = "/home/libai/00_isaaclab/unitree_rl_lab/taixi_model/A2/urdf/a2_box.xml"
+MODEL_PATH = os.path.join(os.path.dirname(__file__), "../../taixi_model/A2/urdf/a2_box.xml")
+
 
 model = mujoco.MjModel.from_xml_path(MODEL_PATH)
 data = mujoco.MjData(model)

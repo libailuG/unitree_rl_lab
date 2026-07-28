@@ -65,7 +65,7 @@
   <worldbody>
 
     <body name= "box" pos="0 0 0" euler="0 0 0">
-      <geom class="gemo_collision_box" type="box" size="0.2 0.2 0.1" pos="-1.5 0.4 0.05"/>
+      <geom class="gemo_collision_box" type="box" size="0.2 0.2 0.1" pos="-1.0 0.7 0.1"/>
     </body>
 
 
