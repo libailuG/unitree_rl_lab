@@ -81,6 +81,32 @@ Feet rewards.
 """
 
 
+
+
+
+def feet_air_time(
+    env: ManagerBasedRLEnv, command_name: str, sensor_cfg: SceneEntityCfg, threshold: float
+) -> torch.Tensor:
+    """Reward long steps taken by the feet using L2-kernel.
+
+    This function rewards the agent for taking steps that are longer than a threshold. This helps ensure
+    that the robot lifts its feet off the ground and takes steps. The reward is computed as the sum of
+    the time for which the feet are in the air.
+
+    If the commands are small (i.e. the agent is not supposed to take a step), then the reward is zero.
+    """
+    # extract the used quantities (to enable type-hinting)
+    contact_sensor: ContactSensor = env.scene.sensors[sensor_cfg.name]
+    # compute the reward
+    first_contact = contact_sensor.compute_first_contact(env.step_dt)[:, sensor_cfg.body_ids]
+    last_air_time = contact_sensor.data.last_air_time[:, sensor_cfg.body_ids]
+    reward = torch.sum((last_air_time - threshold) * first_contact, dim=1)
+    # no reward for zero command
+    reward *= torch.norm(env.command_manager.get_command(command_name)[:, :2], dim=1) > 0.1
+    return reward
+
+
+
 def feet_stumble(env: ManagerBasedRLEnv, sensor_cfg: SceneEntityCfg) -> torch.Tensor:
     # extract the used quantities (to enable type-hinting)
     contact_sensor: ContactSensor = env.scene.sensors[sensor_cfg.name]
@@ -198,6 +224,45 @@ def feet_gait(
         cmd_norm = torch.norm(env.command_manager.get_command(command_name), dim=1)
         reward *= cmd_norm > 0.1
     return reward
+
+
+
+def joint_sinusoidal_guidance(
+    env: ManagerBasedRLEnv,
+    period: float,
+    amplitude: float,
+    phase_offset: float,
+    asset_cfg: SceneEntityCfg,
+) -> torch.Tensor:
+    """引导关节跟踪正弦轨迹"""
+    asset: Articulation = env.scene[asset_cfg.name]
+    global_phase = (env.episode_length_buf * env.step_dt) % period / period  # [0, 1)
+    
+    # 目标角度: amplitude * sin(2π * (phase + offset))
+    target = amplitude * torch.sin(
+        (global_phase.unsqueeze(1) + torch.tensor(phase_offset, device=env.device)) * 2.0 * torch.pi
+    )
+    actual = asset.data.joint_pos[:, asset_cfg.joint_ids]
+    return -torch.sum(torch.abs(actual - target), dim=1)
+
+
+def double_air_time_penalty(
+    env: ManagerBasedRLEnv,
+    sensor_cfg: SceneEntityCfg,
+) -> torch.Tensor:
+    """Penalize both feet being in the air simultaneously.
+
+    For bipedal walking, at least one foot should be in contact with the ground
+    at all times. This term returns 1.0 when both feet are in the air and 0.0
+    otherwise, functioning as a binary penalty that discourages flight phases.
+    """
+    contact_sensor: ContactSensor = env.scene.sensors[sensor_cfg.name]
+    is_contact = contact_sensor.data.current_contact_time[:, sensor_cfg.body_ids] > 0.0
+    # True when ALL feet are in the air (no foot contacts ground)
+    both_air = torch.all(~is_contact, dim=1)
+    return both_air.float()
+
+
 
 
 """

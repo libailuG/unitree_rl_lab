@@ -33,6 +33,8 @@ python -m pip install -e source/unitree_rl_lab
 
 
 '''
+python scripts/rsl_rl/train.py --task Unitree-G1-29dof-Velocity --num_envs 8192 --headless
+
 
 
 python scripts/rsl_rl/play.py --task Unitree-G1-29dof-Velocity \
