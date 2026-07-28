@@ -626,6 +626,6 @@ class A2RoughEnvCfg_PLAY(A2RoughEnvCfg):
             "y": (0.0, 0.0),
             "yaw": (0.0, 0.0),
         }
-        self.events.reset_robot_joints.params["position_range"] = (1.0, 1.0)
+        self.events.reset_robot_joints.params["position_range"] = (0.0, 0.0)
         self.curriculum.terrain_levels = None
 

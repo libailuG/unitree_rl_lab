@@ -21,7 +21,7 @@ parser.add_argument("--video_length", type=int, default=200, help="Length of the
 parser.add_argument(
     "--disable_fabric", action="store_true", default=False, help="Disable fabric and use USD I/O operations."
 )
-parser.add_argument("--num_envs", type=int, default=1, help="Number of environments to simulate.")
+parser.add_argument("--num_envs", type=int, default=5, help="Number of environments to simulate.")
 parser.add_argument("--task", type=str, default="Taixi-A2-Velocity-Rough", help="Name of the task.")
 parser.add_argument("--real-time", action="store_true", default=False, help="Run in real-time, if possible.")
 # append AppLauncher cli args
@@ -42,9 +42,7 @@ import os
 import time
 import torch
 
-import isaaclab.sim as sim_utils
 import isaaclab_tasks  # noqa: F401
-from isaaclab.assets import RigidObjectCfg
 from isaaclab.envs import DirectMARLEnv, multi_agent_to_single_agent
 from isaaclab.utils.dict import print_dict
 
@@ -61,37 +59,6 @@ def main():
         num_envs=args_cli.num_envs,
         use_fabric=not args_cli.disable_fabric,
         entry_point_key="play_env_cfg_entry_point",
-    )
-
-    # ── 添加地形长方体 (与 a2_box.xml 对齐) ──
-    # a2_box.xml:
-    #   robot base_link @ world (0, 0, 1.0)
-    #   box geom @ world (-1.5, 0.4, 0.05), MuJoCo half-extents "0.2 0.2 0.1"
-    #   → box 相对于 robot 的偏移: (-1.5, 0.4, -0.95)
-    # Isaac Sim:
-    #   robot init_pos = (0, 0, 1.05)  (TAIXI_A2_ROUGH_CFG)
-    #   → box world pos = robot_init + relative_offset = (-1.5, 0.4, 0.10)
-
-    box_pos = (
-        -16.0 - 0.9,
-        -16.0 + 0.7,
-        0.1,     # = 1.05 + (-0.95) = 0.10
-    )
-    # prim_path 放在 /World/ground 下
-    env_cfg.scene.terrain_box = RigidObjectCfg(
-        prim_path="/World/ground/terrain_box",
-        spawn=sim_utils.CuboidCfg(
-            size=(0.4, 0.4, 0.2),  # 全尺寸 (MuJoCo half-extents × 2)
-            rigid_props=sim_utils.RigidBodyPropertiesCfg(kinematic_enabled=True),
-            collision_props=sim_utils.CollisionPropertiesCfg(),
-            visual_material=sim_utils.PreviewSurfaceCfg(diffuse_color=(1.0, 1.0, 0.0)),
-            physics_material=sim_utils.RigidBodyMaterialCfg(
-                static_friction=1.0,
-                dynamic_friction=1.0,
-            ),
-        ),
-        init_state=RigidObjectCfg.InitialStateCfg(pos=box_pos),
-        collision_group=-1,
     )
 
     # create isaac environment
@@ -141,20 +108,22 @@ def main():
         #     clip=(-1.0, 1.0),
         # )
         # Formula: height_scan = sensor_z - hit_z - offset(0.5), then clamp(-1, 1)
-        if timestep % 100 == 0 and False:
+        if timestep % 100 == 0:
+            # 只显示第5个机器人 (index 4) 的信息
+            env_idx = 4
             # 打印机器人世界位置
             robot_data = env.unwrapped.scene["robot"].data
-            root_pos = robot_data.root_pos_w[0]  # (x, y, z) env 0
+            root_pos = robot_data.root_pos_w[env_idx]  # (x, y, z)
             print(f"[Step {timestep}] robot world pos = ({root_pos[0]:.3f}, {root_pos[1]:.3f}, {root_pos[2]:.3f})")
             # 打印关节角度 (deg)
-            joint_pos = robot_data.joint_pos[0]  # (12,) rad
+            joint_pos = robot_data.joint_pos[env_idx]  # (12,) rad
             joint_deg = torch.rad2deg(joint_pos)
             deg_str = " ".join(f"{joint_deg[i]:7.2f}" for i in range(len(joint_deg)))
-            print(f"  joint pos (deg): [{deg_str}]")
+            # print(f"  joint pos (deg): [{deg_str}]")
             # 打印关节输出扭矩 (Nm)
-            joint_trq = robot_data.applied_torque[0]  # (12,) Nm
+            joint_trq = robot_data.applied_torque[env_idx]  # (12,) Nm
             trq_str = " ".join(f"{joint_trq[i]:7.2f}" for i in range(len(joint_trq)))
-            print(f"  joint trq (Nm) : [{trq_str}]")
+            # print(f"  joint trq (Nm) : [{trq_str}]")
 
             hs_data = env.unwrapped.scene["height_scanner"].data  # type: ignore[attr-defined]
             ray_hits = hs_data.ray_hits_w
@@ -173,11 +142,10 @@ def main():
                 sensor_z = hs_data.pos_w[:, 2]                          # (num_envs,)
                 height_scan_full = sensor_z.unsqueeze(1) - ray_hits[..., 2] - 0.5  # (num_envs, 187)
                 height_scan_full = torch.clamp(height_scan_full, -1.0, 1.0)
-                print(corner_idx)
                 corner_vals = height_scan_full[:, corner_idx]           # (num_envs, 4)
-                print(f"[Step {timestep}] height_scan({num_rays} rays), clip=(-1,1):"
-                      f"  rear-right={corner_vals[0, 0]:.4f}  front-right={corner_vals[0, 1]:.4f}"
-                      f"  rear-left={corner_vals[0, 2]:.4f}  front-left={corner_vals[0, 3]:.4f}")
+                print(f"[Step {timestep}] height_scan({num_rays} rays), env {env_idx}, clip=(-1,1):"
+                      f"  rear-right={corner_vals[env_idx, 0]:.4f}  front-right={corner_vals[env_idx, 1]:.4f}"
+                      f"  rear-left={corner_vals[env_idx, 2]:.4f}  front-left={corner_vals[env_idx, 3]:.4f}")
 
         timestep += 1
 
