@@ -158,6 +158,19 @@ python scripts/rsl_rl/play.py --task Taixi-A2-Velocity-Rough \
 
 
 '''
+'''
+Taixi-A2-Velocity-Rough-Test-Plane
+
+python scripts/rsl_rl/train.py --task Taixi-A2-Velocity-Rough-Test-Plane --num_envs 16
+
+python scripts/rsl_rl/train.py --task Taixi-A2-Velocity-Rough-Test-Plane --num_envs 8192 --headless
+
+
+
+
+'''
+
+
 
 
 
