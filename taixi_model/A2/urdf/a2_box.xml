@@ -77,7 +77,7 @@
 
 
     <body name="base_link" pos="0 0 1.05" euler="0 0 0">
-      <!-- <freejoint name="base_free"/> -->
+      <freejoint name="base_free"/>
       <inertial pos="-0.14464 0 0.63562" mass="1.6082" fullinertia="1.6349 1.6777 0.06302 0 0.2309 0"/>
       <geom class="gemo_visual" type="mesh" mesh="mesh_base" rgba="1 0 0 1"/>
       <geom class="gemo_collision" type="box" size="0.2 0.15 0.75" pos="-0.2 0 0.75"/>
