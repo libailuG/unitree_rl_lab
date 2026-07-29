@@ -1,10 +1,8 @@
 import math
 
 import isaaclab.sim as sim_utils
-import isaaclab.terrains as terrain_gen
 from isaaclab.assets import ArticulationCfg, AssetBaseCfg
 from isaaclab.envs import ManagerBasedRLEnvCfg
-from isaaclab.managers import CurriculumTermCfg as CurrTerm
 from isaaclab.managers import EventTermCfg as EventTerm
 from isaaclab.managers import ObservationGroupCfg as ObsGroup
 from isaaclab.managers import ObservationTermCfg as ObsTerm
@@ -22,10 +20,6 @@ from unitree_rl_lab.tasks.locomotion import mdp
 from unitree_rl_lab.tasks.locomotion import mdp_2
 
 
-from isaaclab.terrains.config.rough import ROUGH_TERRAINS_CFG  # isort: skip
-
-from isaaclab_assets import G1_MINIMAL_CFG  # isort: skip
-
 from unitree_rl_lab.assets.robots.taixi import TAIXI_A2_ROUGH_CFG as ROBOT_CFG
 
 
@@ -34,12 +28,10 @@ from unitree_rl_lab.assets.robots.taixi import TAIXI_A2_ROUGH_CFG as ROBOT_CFG
 class MySceneCfg(InteractiveSceneCfg):
     """Configuration for the terrain scene with a legged robot."""
 
-    # ground terrain
+    # ground terrain (flat plane)
     terrain = TerrainImporterCfg(
         prim_path="/World/ground",
-        terrain_type="generator",
-        terrain_generator=ROUGH_TERRAINS_CFG,
-        max_init_terrain_level=5,
+        terrain_type="plane",
         collision_group=-1,
         physics_material=sim_utils.RigidBodyMaterialCfg(
             friction_combine_mode="multiply",
@@ -125,12 +117,12 @@ class ObservationsCfg:
         joint_pos = ObsTerm(func=mdp_2.joint_pos_rel, noise=Unoise(n_min=-0.01, n_max=0.01))
         joint_vel = ObsTerm(func=mdp_2.joint_vel_rel, noise=Unoise(n_min=-1.5, n_max=1.5))
         actions = ObsTerm(func=mdp_2.last_action)
-        height_scan = ObsTerm(
-            func=mdp_2.height_scan,
-            params={"sensor_cfg": SceneEntityCfg("height_scanner")},
-            noise=Unoise(n_min=-0.1, n_max=0.1),
-            clip=(-1.0, 1.0),
-        )
+        # height_scan = ObsTerm(
+        #     func=mdp_2.height_scan,
+        #     params={"sensor_cfg": SceneEntityCfg("height_scanner")},
+        #     noise=Unoise(n_min=-0.1, n_max=0.1),
+        #     clip=(-1.0, 1.0),
+        # )
         gait_phase = ObsTerm(func=mdp.gait_phase, params={"period": 0.8})
 
         def __post_init__(self):
@@ -156,11 +148,11 @@ class ObservationsCfg:
         joint_pos = ObsTerm(func=mdp_2.joint_pos_rel)
         joint_vel = ObsTerm(func=mdp_2.joint_vel_rel)
         actions = ObsTerm(func=mdp_2.last_action)
-        height_scan = ObsTerm(
-            func=mdp_2.height_scan,
-            params={"sensor_cfg": SceneEntityCfg("height_scanner")},
-            clip=(-1.0, 1.0),
-        )
+        # height_scan = ObsTerm(
+        #     func=mdp_2.height_scan,
+        #     params={"sensor_cfg": SceneEntityCfg("height_scanner")},
+        #     clip=(-1.0, 1.0),
+        # )
         # -- privileged: gait phase (sin, cos) of the global gait cycle.
         # period must match the gait reward's period so the critic learns the same rhythm.
         gait_phase = ObsTerm(func=mdp.gait_phase, params={"period": 0.8})
@@ -305,9 +297,11 @@ class TerminationsCfg:
 
 @configclass
 class CurriculumCfg:
-    """Curriculum terms for the MDP."""
+    """Curriculum terms for the MDP.
 
-    terrain_levels = CurrTerm(func=mdp_2.terrain_levels_vel)
+    .. note::
+        ``terrain_levels`` curriculum is disabled because terrain is set to "plane".
+    """
 
 
 ##
@@ -607,15 +601,13 @@ class A2RoughEnvCfg_PLAY(A2RoughEnvCfg):
         self.scene.num_envs = 50
         self.scene.env_spacing = 2.5
         self.episode_length_s = 40.0
-        # spawn the robot randomly in the grid (instead of their terrain levels)
-        self.scene.terrain.max_init_terrain_level = 0
-        # reduce the number of terrains to save memory
+        # reduce the number of terrains to save memory (only applies when terrain_type="generator")
         if self.scene.terrain.terrain_generator is not None:
             self.scene.terrain.terrain_generator.num_rows = 5
             self.scene.terrain.terrain_generator.num_cols = 5
             self.scene.terrain.terrain_generator.curriculum = False
 
-        self.commands.base_velocity.ranges.lin_vel_x = (1.0, 1.0)
+        self.commands.base_velocity.ranges.lin_vel_x = (0.0, 0.0)
         self.commands.base_velocity.ranges.lin_vel_y = (0.0, 0.0)
         self.commands.base_velocity.ranges.ang_vel_z = (0.0, 0.0)
         self.commands.base_velocity.ranges.heading = (0.0, 0.0)
@@ -633,5 +625,4 @@ class A2RoughEnvCfg_PLAY(A2RoughEnvCfg):
             "yaw": (0.0, 0.0),
         }
         self.events.reset_robot_joints.params["position_range"] = (0.0, 0.0)
-        self.curriculum.terrain_levels = None
 

@@ -24,3 +24,14 @@ gym.register(
         "rsl_rl_cfg_entry_point": f"unitree_rl_lab.tasks.locomotion.agents.rsl_rl_ppo_cfg:A2RoughPPORunnerCfg",
     },
 )
+
+gym.register(
+    id="Taixi-A2-Velocity-Rough-Test-Plane",
+    entry_point="isaaclab.envs:ManagerBasedRLEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.velocity_rough_env_cfg_test_plane:A2RoughEnvCfg",
+        "play_env_cfg_entry_point": f"{__name__}.velocity_rough_env_cfg_test_plane:A2RoughEnvCfg_PLAY",
+        "rsl_rl_cfg_entry_point": f"unitree_rl_lab.tasks.locomotion.agents.rsl_rl_ppo_cfg:A2RoughPPORunnerCfg",
+    },
+)
