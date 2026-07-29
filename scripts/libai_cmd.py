@@ -165,6 +165,9 @@ python scripts/rsl_rl/train.py --task Taixi-A2-Velocity-Rough-Test-Plane --num_e
 
 python scripts/rsl_rl/train.py --task Taixi-A2-Velocity-Rough-Test-Plane --num_envs 8192 --headless
 
+python scripts/rsl_rl/play.py --task Taixi-A2-Velocity-Rough-Test-Plane \
+    --num_envs 16 \
+    --checkpoint /home/libai/05_unitree_rl_lab/unitree_rl_lab/logs/rsl_rl/taixi_a2_velocity_rough_test_plane/2026-07-29_14-44-37/model_500.pt
 
 
 

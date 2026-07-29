@@ -83,9 +83,9 @@ decimation = 4
 # obs
 gait_period = 0.8
 
-obs_num_arrays = 9
-obs_arrar_size = 3 + 3 + 3 + 3 + 12 + 12 + 12 + 187 + 2
-obs_arrar_size = 237
+obs_num_arrays = 8
+obs_arrar_size = 3 + 3 + 3 + 3 + 12 + 12 + 12 + 2
+obs_arrar_size = 0
 obs_history_length = 3
 obs_fifo = ArrayFIFO(num_groups=obs_history_length, num_arrays=obs_num_arrays)
 
@@ -97,7 +97,7 @@ velocity_commands = np.array([0.0, 0.0, 0.0])
 action = np.zeros(joint_num)
 
 policy_path = os.path.join(
-    os.getcwd(), "logs/rsl_rl/", "taixi_a2_velocity_rough/2026-07-29_13-49-49/",
+    os.getcwd(), "logs/rsl_rl/", "taixi_a2_velocity_rough_test_plane/2026-07-29_14-44-37/",
     "exported/", "policy_260729.pt"
 )
 print(f"policy_path: {policy_path}")
