@@ -82,17 +82,6 @@ for _name, _dim, _ in OBS_TERMS:
     _off += _dim
 
 
-def get_term_hist0(policy_obs_flat: torch.Tensor, history: int, term_name: str) -> torch.Tensor:
-    """Extract hist_0 of a named term from a flat policy observation.
-
-    Layout: for each term, all dims of hist_0 come first, then hist_1, etc.
-      [dim0_h0, dim1_h0, ..., dim{D-1}_h0, dim0_h1, ..., dim{D-1}_h{H-1}]
-    """
-    dim = next(d for n, d, _ in OBS_TERMS if n == term_name)
-    start = _term_offset[term_name] * history
-    return policy_obs_flat[start : start + dim]
-
-
 def write_obs(lines: list[str], tensor_1d: torch.Tensor, prefix: str, history: int):
     """Split a flat 1-D obs tensor into named components and format.
 
@@ -167,67 +156,78 @@ def main():
     policy.eval()
     policy = policy.to(env.unwrapped.device)
 
-    # ── Warmup: wait until joint_pos starts fluctuating ──
+    # ── Warmup: run 10 seconds for the robot to stabilize at default pose ──
     obs_dict, _ = env.reset()
-    init_joint_pos = get_term_hist0(obs_dict["policy"][0], POLICY_HISTORY, "joint_pos").clone()
-    print(f"[INFO]: Initial joint_pos (hist_0): {init_joint_pos.tolist()}")
 
-    warmup_steps = 0
-    max_warmup = 500
-    threshold = 0.01  # rad — consider "started moving" when any joint changes by >0.01 rad
+    warmup_seconds = 10.0
+    step_dt = env.unwrapped.step_dt
+    warmup_steps = int(warmup_seconds / step_dt)
+    print(f"[INFO]: Running {warmup_steps} warmup steps ({warmup_seconds}s, dt={step_dt})...")
 
-    while warmup_steps < max_warmup:
+    for _ in range(warmup_steps):
         with torch.inference_mode():
             # Zero actions → hold default joint positions
             actions = torch.zeros_like(policy(obs_dict["policy"]))
             obs_dict, _, _, _, _ = env.step(actions)
-        warmup_steps += 1
 
-        curr_joint_pos = get_term_hist0(obs_dict["policy"][0], POLICY_HISTORY, "joint_pos")
-        max_diff = (curr_joint_pos - init_joint_pos).abs().max().item()
-        if max_diff > threshold:
-            print(f"[INFO]: joint_pos started fluctuating at warmup step {warmup_steps} "
-                  f"(max diff from init = {max_diff:.5f} rad)")
-            break
-    else:
-        print(f"[WARN]: joint_pos did not fluctuate within {max_warmup} steps, recording anyway")
+    print(f"[INFO]: Warmup complete, starting recording...")
 
-    # ── Record 3 steps ──
+    # ── Record 10 steps ──
+    num_records = 10
+
+    # Precompute actions term offsets for patching
+    _actions_dim = next(d for n, d, _ in OBS_TERMS if n == "actions")
+    _actions_hist0_start = _term_offset["actions"] * POLICY_HISTORY
+
+    def patch_actions(obs_flat: torch.Tensor, act: torch.Tensor) -> torch.Tensor:
+        """Replace hist_0 of 'actions' term with the given action."""
+        obs = obs_flat.clone()
+        obs[_actions_hist0_start : _actions_hist0_start + _actions_dim] = act
+        return obs
+
     all_lines = []
-    all_lines.append("# Auto-generated step data from 4_play_a2_rough.py")
+    all_lines.append("# Auto-generated step data from 5_play_a2_rough.py")
     all_lines.append(f"# task: {args_cli.task}, num_envs: {args_cli.num_envs}")
-    all_lines.append(f"# warmup steps: {warmup_steps}, fluctuation_threshold: {threshold} rad")
+    all_lines.append(f"# warmup: {warmup_steps} steps ({warmup_seconds}s), zero actions (default pose)")
+    all_lines.append(f"# records: {num_records} steps")
     all_lines.append(f"# obs_dim per history step: {OBS_DIM}")
     all_lines.append(f"# policy history: {POLICY_HISTORY} → {OBS_DIM * POLICY_HISTORY} dims")
     all_lines.append(f"# critic history: {CRITIC_HISTORY} → {OBS_DIM * CRITIC_HISTORY} dims")
     all_lines.append("")
 
-    for step in range(0, 4):
-        if step == 0:
-            all_lines.append("# ============================================================")
-            all_lines.append("#  Step 0 (first after fluctuation detected)")
-            all_lines.append("# ============================================================")
-        else:
-            all_lines.append("# ============================================================")
-            all_lines.append(f"#  Step {step}")
-            all_lines.append("# ============================================================")
+    for step in range(0, num_records):
+        all_lines.append("# ============================================================")
+        all_lines.append(f"#  Step {step}")
+        all_lines.append("# ============================================================")
 
-        # Policy observation (flat → structured)
-        obs_policy_flat = obs_dict["policy"][0]  # shape (1, N) → (N,)
+        # Compute policy action and patch into obs
+        with torch.inference_mode():
+            policy_action = policy(obs_dict["policy"])  # shape (1, 12)
+        obs_policy_patched = patch_actions(obs_dict["policy"][0], policy_action[0])
+
+        # Policy observation (flat → structured, with patched actions)
         all_lines.append(f"# --- policy observation ({POLICY_HISTORY} history × {OBS_DIM} = {OBS_DIM * POLICY_HISTORY}) ---")
-        write_obs(all_lines, obs_policy_flat, f"step{step}_obs_policy", POLICY_HISTORY)
+        write_obs(all_lines, obs_policy_patched, f"step{step}_obs_policy", POLICY_HISTORY)
 
         # Critic observation (flat → structured)
-        obs_critic_flat = obs_dict["critic"][0]  # shape (1, N) → (N,)
-        all_lines.append(f"# --- critic observation ({CRITIC_HISTORY} history × {OBS_DIM} = {OBS_DIM * CRITIC_HISTORY}) ---")
-        write_obs(all_lines, obs_critic_flat, f"step{step}_obs_critic", CRITIC_HISTORY)
+        # obs_critic_flat = obs_dict["critic"][0]
+        # all_lines.append(f"# --- critic observation ({CRITIC_HISTORY} history × {OBS_DIM} = {OBS_DIM * CRITIC_HISTORY}) ---")
+        # write_obs(all_lines, obs_critic_flat, f"step{step}_obs_critic", CRITIC_HISTORY)
 
-        # Step forward (only for steps 0-2, to record steps 1-3)
-        if step < 3:
+        # Standalone policy action
+        act_vals = policy_action[0].detach().cpu().tolist()
+        formatted = ", ".join(f"{v: 11.5f}" for v in act_vals)
+        all_lines.append(f"# --- policy action (12 DoF) ---")
+        all_lines.append(f"step{step}_policy_action = [")
+        all_lines.append(f"    {formatted},")
+        all_lines.append(f"]  # (12,)")
+        all_lines.append("")
+
+        # Step forward with zeros (except after last record)
+        if step < num_records - 1:
             with torch.inference_mode():
-                # Zero actions → robot stays at default joint positions
-                actions = torch.zeros_like(policy(obs_dict["policy"]))
-                obs_dict, _, _, _, _ = env.step(actions)
+                zero_actions = torch.zeros_like(policy_action)
+                obs_dict, _, _, _, _ = env.step(zero_actions)
 
     # ── Write output ──
     output_path = os.path.join(output_dir, "step_data.py")

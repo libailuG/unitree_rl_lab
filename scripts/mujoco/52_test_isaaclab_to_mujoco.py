@@ -1,4 +1,8 @@
 import os
+import sys
+import termios
+import tty
+import select
 import mujoco
 import mujoco.viewer
 import numpy as np
@@ -425,12 +429,12 @@ def compute_obs(data,velocity_commands,last_action, height_scanner_obs, global_t
 
     # 5.0 joint_pos
     # joint_pos_rel_scaled = data.qpos[7 + mj_qpos_to_isaaclab] - init_joint_pos_isaaclab
-    joint_pos_rel_scaled = data.qpos[7 + mj_qpos_to_isaaclab]
-    # joint_pos_rel_scaled = data.qpos[0 + mj_qpos_to_isaaclab] - init_joint_pos_isaaclab
+    # joint_pos_rel_scaled = data.qpos[7 + mj_qpos_to_isaaclab]
+    joint_pos_rel_scaled = data.qpos[0 + mj_qpos_to_isaaclab] - init_joint_pos_isaaclab
 
     # 6.0 joint_vel
-    joint_vel_rel_scaled = data.qvel[6 + mj_qpos_to_isaaclab].copy()
-    # joint_vel_rel_scaled = data.qvel[0 + mj_qpos_to_isaaclab]
+    # joint_vel_rel_scaled = data.qvel[6 + mj_qpos_to_isaaclab].copy()
+    joint_vel_rel_scaled = data.qvel[0 + mj_qpos_to_isaaclab]
 
     # 7.0 last_action
 
@@ -504,6 +508,25 @@ def write_obs_fifo(lines, fifo_flat, prefix, history):
 # ===========================================================================
 #  仿真循环
 # ===========================================================================
+# ── Terminal keyboard helpers ──
+def get_key_nonblock():
+    """Read a single keypress without blocking, return None if no key pressed."""
+    if select.select([sys.stdin], [], [], 0)[0]:
+        return sys.stdin.read(1)
+    return None
+
+def get_key_block():
+    """Read a single keypress, blocking."""
+    fd = sys.stdin.fileno()
+    old = termios.tcgetattr(fd)
+    try:
+        tty.setraw(fd)
+        ch = sys.stdin.read(1)
+    finally:
+        termios.tcsetattr(fd, termios.TCSADRAIN, old)
+    return ch
+
+
 def main():
 
     global action, velocity_commands, last_command_time
@@ -512,10 +535,21 @@ def main():
     step_count = 0
     run_first_flag = True
 
+    # ── Keyboard control state ──
+    paused = True
+
+    print("\n" + "=" * 60)
+    print("  Keyboard Control (focus on TERMINAL, not viewer window)")
+    print("    ENTER  — single step")
+    print("    R      — run continuously")
+    print("    S      — stop / pause")
+    print("    Q      — quit")
+    print("=" * 60 + "\n")
+
     # ── Data recording state ──
     record_phase = 0          # 0=warmup, 1=waiting_for_fluctuation, 2=recording, 3=done
     record_steps_collected = 0
-    rec_fifos = []            # store 3 FIFO snapshots
+    rec_fifos = []            # store FIFO snapshots
     joint_pos_init = None
     fluctuation_threshold = 0.01  # rad
 
@@ -532,9 +566,26 @@ def main():
         viewer.cam.azimuth = 90     # 从机器人左侧看
         viewer.cam.elevation = -15   # 略微俯视
 
-
-
         while viewer.is_running():
+            # ── Keyboard step control (terminal-based) ──
+            if paused:
+                viewer.sync()
+                time.sleep(0.01)
+                key = get_key_nonblock()
+                if key is not None:
+                    if key == '\r' or key == '\n':   # Enter → step
+                        pass  # fall through to execute one step
+                    elif key.lower() == 'r':          # R → run
+                        paused = False
+                        print("[KB] RUNNING...")
+                    elif key.lower() == 's':          # S → pause
+                        paused = True
+                        print("[KB] PAUSED")
+                    elif key.lower() == 'q':          # Q → quit
+                        break
+                else:
+                    continue  # no key pressed, keep waiting
+
             step_start = time.time()
 
 
@@ -560,7 +611,8 @@ def main():
                     run_first_flag = False
                     print(f"[INFO]: Warmup finished at step {step_count}, policy starts now")
                     # Initialize joint_pos tracking
-                    joint_pos_init = data.qpos[7 + mj_qpos_to_isaaclab].copy()
+                    # joint_pos_init = data.qpos[7 + mj_qpos_to_isaaclab].copy()
+                    joint_pos_init = data.qpos[0 + mj_qpos_to_isaaclab].copy()
                     record_phase = 1
 
                 # obs_compute
@@ -583,10 +635,12 @@ def main():
                     target_q = init_joint_pos_isaaclab + action * action_scale
                     data.ctrl = target_q[isaaclab_to_mj_act]
 
+
                     # ── Data recording logic ──
                     if record_phase == 1:
                         # Check if joint_pos has started fluctuating
-                        curr_joint_pos = data.qpos[7 + mj_qpos_to_isaaclab].copy()
+                        # curr_joint_pos = data.qpos[7 + mj_qpos_to_isaaclab].copy()
+                        curr_joint_pos = data.qpos[0 + mj_qpos_to_isaaclab].copy()
                         max_diff = np.abs(curr_joint_pos - joint_pos_init).max()
                         if max_diff > fluctuation_threshold:
                             print(f"[INFO]: joint_pos fluctuating at step {step_count} "
@@ -599,7 +653,7 @@ def main():
                         rec_fifos.append(fifo_flat)
                         record_steps_collected += 1
                         print(f"[INFO]: Recorded step {record_steps_collected}/3 at sim step {step_count}")
-                        if record_steps_collected >= 3:
+                        if record_steps_collected >= 10:
                             record_phase = 3
                             # Write data
                             all_lines = []
