@@ -229,8 +229,11 @@ def cast_ray_grid(model, data):
     geomid   = np.array([-1], dtype=np.int32)
 
     # 提取 base_link yaw
+    # xmat 是行主序 3×3 旋转矩阵 (local→world)
+    # local +X 在世界系的 y 分量 = xmat[3] = sin(yaw)
+    # local +X 在世界系的 x 分量 = xmat[0] = cos(yaw)
     xmat    = data.xmat[base_link_id]
-    yaw     = math.atan2(xmat[1], xmat[0])
+    yaw     = math.atan2(xmat[3], xmat[0])
     cos_yaw = math.cos(yaw)
     sin_yaw = math.sin(yaw)
 
@@ -313,7 +316,7 @@ def heights_to_hit_points(model, data, heights_flat):
     """height distances → 世界坐标命中点 + 高度 Z (用于可视化)."""
     base_pos = data.xpos[base_link_id]
     xmat     = data.xmat[base_link_id]
-    yaw      = math.atan2(xmat[1], xmat[0])
+    yaw      = math.atan2(xmat[3], xmat[0])
     cos_yaw  = math.cos(yaw)
     sin_yaw  = math.sin(yaw)
 
