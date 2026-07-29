@@ -424,7 +424,8 @@ def compute_obs(data,velocity_commands,last_action, height_scanner_obs, global_t
     # 4.0 velocity_commands
 
     # 5.0 joint_pos
-    joint_pos_rel_scaled = data.qpos[7 + mj_qpos_to_isaaclab] - init_joint_pos_isaaclab
+    # joint_pos_rel_scaled = data.qpos[7 + mj_qpos_to_isaaclab] - init_joint_pos_isaaclab
+    joint_pos_rel_scaled = data.qpos[7 + mj_qpos_to_isaaclab]
     # joint_pos_rel_scaled = data.qpos[0 + mj_qpos_to_isaaclab] - init_joint_pos_isaaclab
 
     # 6.0 joint_vel
@@ -591,13 +592,8 @@ def main():
                             print(f"[INFO]: joint_pos fluctuating at step {step_count} "
                                   f"(max diff = {max_diff:.5f} rad), starting recording...")
                             record_phase = 2
-#    *   *    ／￣＼／￣＼  ♥
-#  **** **** │          │ ♥
-#  *********  ╲        ╱  ♥
-#    *****      ╲    ╱    ♥
-#      *          ╲╱      ♥
-   
-    
+
+
                     if record_phase == 2:
                         fifo_flat = obs_fifo.get_fifo().copy()
                         rec_fifos.append(fifo_flat)
