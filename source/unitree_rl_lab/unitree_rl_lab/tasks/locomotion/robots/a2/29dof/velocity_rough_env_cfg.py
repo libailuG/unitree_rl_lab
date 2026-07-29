@@ -511,6 +511,12 @@ class A2Rewards(RewardsCfg):
     #     params={"asset_cfg": SceneEntityCfg("robot", joint_names="torso_joint")},
     # )
 
+    joint_deviation_ankle_roll = RewTerm(
+        func=mdp_2.joint_deviation_l1,
+        weight=-0.01,
+        params={"asset_cfg": SceneEntityCfg("robot", joint_names=".*_ankle_roll_joint")},
+    ) 
+
     hip_pitch_gait = RewTerm(
         func=mdp.joint_sinusoidal_guidance,
         weight=0.3,

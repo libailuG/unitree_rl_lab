@@ -1,7 +1,6 @@
 import sys
 import time
-import threading
-from collections import defaultdict
+import atexit
 import termios
 import tty
 import select
@@ -13,22 +12,66 @@ class TermiosKeyMonitor:
     局限: termios 无法检测按键释放, 因此只能上报"本帧读到了什么键"。
     每个按键只在本帧触发一次 just_pressed; is_pressed / was_just_released
     始终返回 False (如需长按/释放检测, 请使用 pynput 方案)。
+
+    用法:
+        # 方式 1: 手动 start/stop (需配合 try/finally)
+        monitor = TermiosKeyMonitor()
+        monitor.start()
+        try:
+            while True:
+                monitor.frame()
+                if monitor.was_just_pressed('q'):
+                    break
+        finally:
+            monitor.stop()
+
+        # 方式 2: context manager (推荐)
+        with TermiosKeyMonitor() as monitor:
+            while True:
+                monitor.frame()
+                if monitor.was_just_pressed('q'):
+                    break
     """
 
     def __init__(self):
         self.just_pressed: dict[str, bool] = {}
         self._old_settings = None
         self._running = False
+        self._atexit_registered = False
+
+    def __enter__(self):
+        self.start()
+        return self
+
+    def __exit__(self, *args):
+        self.stop()
+        return False
 
     def start(self):
         self._old_settings = termios.tcgetattr(sys.stdin)
         tty.setcbreak(sys.stdin.fileno())
         self._running = True
+        # atexit 作为最后防线：即使忘记调用 stop()，解释器退出时也会恢复终端
+        if not self._atexit_registered:
+            atexit.register(self._safe_stop)
+            self._atexit_registered = True
 
     def stop(self):
+        """恢复终端设置。幂等：重复调用安全。"""
         self._running = False
         if self._old_settings is not None:
-            termios.tcsetattr(sys.stdin, termios.TCSADRAIN, self._old_settings)
+            try:
+                termios.tcsetattr(sys.stdin, termios.TCSADRAIN, self._old_settings)
+            except (termios.error, OSError, ValueError, TypeError):
+                pass  # stdin 可能已被回收或不是 tty
+            self._old_settings = None
+
+    def _safe_stop(self):
+        """atexit 回调：静默失败，不抛出异常打断解释器退出。"""
+        try:
+            self.stop()
+        except Exception:
+            pass
 
     def frame(self):
         """非阻塞读取 stdin, 每读到一个字符即记录为本帧 just_pressed。"""
@@ -47,7 +90,7 @@ class TermiosKeyMonitor:
         return self.just_pressed.get(key, False)
 
     def was_just_released(self, key: str) -> bool:
-        return False   
+        return False
 
 
 def main():

@@ -106,61 +106,65 @@ def main():
     step_flag = False
     step_count = 0
     init_joint_pos_isaaclab = torch.tensor([
-        0.0,                           
         0.0,
         0.0,
-        0.0,                           
-        -10.0 / 180.0 * torch.pi,  
-        -10.0 / 180.0 * torch.pi,      
-        20.0 / 180.0 * torch.pi,  
-        20.0 / 180.0 * torch.pi,  
-        -10.0 / 180.0 * torch.pi, 
-        -10.0 / 180.0 * torch.pi, 
-        0.0,                           
-        0.0,                                                    
+        0.0,
+        0.0,
+        -10.0 / 180.0 * torch.pi,
+        -10.0 / 180.0 * torch.pi,
+        20.0 / 180.0 * torch.pi,
+        20.0 / 180.0 * torch.pi,
+        -10.0 / 180.0 * torch.pi,
+        -10.0 / 180.0 * torch.pi,
+        0.0,
+        0.0,
     ])
 
 
-    # simulate environment
-    while simulation_app.is_running():
+    try:
+        # simulate environment
+        while simulation_app.is_running():
 
-        monitor.frame()
-        if monitor.was_just_pressed('s'):
-            step_flag = True
-        if monitor.was_just_pressed('q'):
-            break
+            monitor.frame()
+            if monitor.was_just_pressed('s'):
+                step_flag = True
+            if monitor.was_just_pressed('q'):
+                break
 
-        if step_flag:
+            if step_flag:
 
-            start_time = time.time()
-            # run everything in inference mode
-            with torch.inference_mode():
-                # extract policy observation from dict and run inference
-                actions = policy(obs_dict["policy"])
+                start_time = time.time()
+                # run everything in inference mode
+                with torch.inference_mode():
+                    # extract policy observation from dict and run inference
+                    actions = policy(obs_dict["policy"])
 
 
-                if step_count < 50:
-                    actions = torch.zeros_like(actions)
-                else:
-                    step_flag = False
-                    print(step_count)
-                    print(obs_dict["policy"])
-                    print((actions[0] * 0.25 + init_joint_pos_isaaclab.to(actions.device))/torch.pi * 180.0)
+                    if step_count < 50:
+                        actions = torch.zeros_like(actions)
+                    else:
+                        step_flag = False
+                        print(step_count)
+                        print(obs_dict["policy"])
+                        print((actions[0] * 0.25 + init_joint_pos_isaaclab.to(actions.device))/torch.pi * 180.0)
 
-                # env stepping
-                obs_dict, _, _, _, _ = env.step(actions)
-            if args_cli.video:
-                timestep += 1
-                # Exit the play loop after recording one video
-                if timestep == args_cli.video_length:
-                    break
+                    # env stepping
+                    obs_dict, _, _, _, _ = env.step(actions)
+                if args_cli.video:
+                    timestep += 1
+                    # Exit the play loop after recording one video
+                    if timestep == args_cli.video_length:
+                        break
 
-            # time delay for real-time evaluation
-            sleep_time = dt - (time.time() - start_time)
-            if args_cli.real_time and sleep_time > 0:
-                time.sleep(sleep_time)
+                # time delay for real-time evaluation
+                sleep_time = dt - (time.time() - start_time)
+                if args_cli.real_time and sleep_time > 0:
+                    time.sleep(sleep_time)
 
-            step_count += 1
+                step_count += 1
+
+    finally:
+        monitor.stop()
 
     # close the simulator
     env.close()

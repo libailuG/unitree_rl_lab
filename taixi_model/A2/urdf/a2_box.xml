@@ -10,7 +10,7 @@
 <mujoco model="a2">
 
   <!-- ========== Compiler & Options ========== -->
-  <compiler angle="radian" meshdir="../meshes"/>
+  <compiler angle="radian" meshdir="../meshes" autolimits="true"/>
 
   <option timestep="0.005" gravity="0 0 -9.81">
     <!-- <flag contactparam="enable"/> -->
@@ -18,7 +18,7 @@
 
   <default>
 
-    <joint damping="0.0" armature="0.000"/>
+    <joint damping="0.0" armature="0.00" limited="true"/>
     <!-- <motor ctrlrange="-1 1" ctrllimited="false"/> -->
 
     <default class="gemo_visual">  <!-- 只显示,不参与碰撞 -->
@@ -199,21 +199,44 @@
 
 
   <actuator>
+    <!-- ============================================================
+      Position-controlled PD motors for all 12 revolute joints
+      Torque limits (forcerange) tuned per-joint:
+        Hip roll:   ±60 Nm
+        Hip yaw:    ±40 Nm
+        Hip pitch:  ±100 Nm
+        Knee:       ±100 Nm
+        Ankle pitch: ±20 Nm
+        Ankle roll:  ±20 Nm
+    ============================================================ -->
+
     <!-- Left Leg Actuators -->
-    <position name="act_left_hip_roll_joint"    joint="left_hip_roll_joint"    ctrlrange="-0.52 2.97"  kp="50.0" kv="0.3" />
-    <position name="act_left_hip_yaw_joint"     joint="left_hip_yaw_joint"     ctrlrange="-2.76 2.76"  kp="50.0" kv="0.3" />
-    <position name="act_left_hip_pitch_joint"   joint="left_hip_pitch_joint"   ctrlrange="-2.53 2.88"  kp="50.0" kv="0.3" />
-    <position name="act_left_knee_joint"        joint="left_knee_joint"        ctrlrange="-0.09 2.88"  kp="50.0" kv="0.3" />
-    <position name="act_left_ankle_pitch_joint" joint="left_ankle_pitch_joint" ctrlrange="-0.87 0.52"  kp="50.0" kv="0.3" />
-    <position name="act_left_ankle_roll_joint"  joint="left_ankle_roll_joint"  ctrlrange="-0.26 0.26"  kp="50.0" kv="0.3" />
+    <position name="act_left_hip_roll_joint"    joint="left_hip_roll_joint"
+              ctrlrange="-0.52 2.97"  kp="50.0" kv="0.3" forcerange="-200.0 200.0"/>
+    <position name="act_left_hip_yaw_joint"     joint="left_hip_yaw_joint"
+              ctrlrange="-2.76 2.76"  kp="50.0" kv="0.3" forcerange="-200.0 200.0"/>
+    <position name="act_left_hip_pitch_joint"   joint="left_hip_pitch_joint"
+              ctrlrange="-2.53 2.88"  kp="50.0" kv="0.3" forcerange="-200.0 200.0"/>
+    <position name="act_left_knee_joint"        joint="left_knee_joint"
+              ctrlrange="-0.09 2.88"  kp="50.0" kv="0.3" forcerange="-200.0 200.0"/>
+    <position name="act_left_ankle_pitch_joint" joint="left_ankle_pitch_joint"
+              ctrlrange="-0.87 0.52"  kp="50.0" kv="0.3" forcerange="-200.0 200.0"/>
+    <position name="act_left_ankle_roll_joint"  joint="left_ankle_roll_joint"
+              ctrlrange="-0.26 0.26"  kp="50.0" kv="0.3" forcerange="-200.0 200.0"/>
 
     <!-- Right Leg Actuators -->
-    <position name="act_right_hip_roll_joint"    joint="right_hip_roll_joint"    ctrlrange="-2.97 0.52"  kp="50.0" kv="0.3" />
-    <position name="act_right_hip_yaw_joint"     joint="right_hip_yaw_joint"     ctrlrange="-2.76 2.76"  kp="50.0" kv="0.3" />
-    <position name="act_right_hip_pitch_joint"   joint="right_hip_pitch_joint"   ctrlrange="-2.53 2.88"  kp="50.0" kv="0.3" />  
-    <position name="act_right_knee_joint"        joint="right_knee_joint"        ctrlrange="-0.09 2.88"  kp="50.0" kv="0.3" />
-    <position name="act_right_ankle_pitch_joint" joint="right_ankle_pitch_joint" ctrlrange="-0.87 0.52"  kp="50.0" kv="0.3" />
-    <position name="act_right_ankle_roll_joint"  joint="right_ankle_roll_joint"  ctrlrange="-0.26 0.26"   kp="50.0" kv="0.3" />
+    <position name="act_right_hip_roll_joint"    joint="right_hip_roll_joint"
+              ctrlrange="-2.97 0.52"  kp="50.0" kv="0.3" forcerange="-200.0 200.0"/>
+    <position name="act_right_hip_yaw_joint"     joint="right_hip_yaw_joint"
+              ctrlrange="-2.76 2.76"  kp="50.0" kv="0.3" forcerange="-200.0 200.0"/>
+    <position name="act_right_hip_pitch_joint"   joint="right_hip_pitch_joint"
+              ctrlrange="-2.53 2.88"  kp="50.0" kv="0.3" forcerange="-200.0 200.0"/>
+    <position name="act_right_knee_joint"        joint="right_knee_joint"
+              ctrlrange="-0.09 2.88"  kp="50.0" kv="0.3" forcerange="-200.0 200.0"/>
+    <position name="act_right_ankle_pitch_joint" joint="right_ankle_pitch_joint"
+              ctrlrange="-0.87 0.52"  kp="50.0" kv="0.3" forcerange="-200.0 200.0"/>
+    <position name="act_right_ankle_roll_joint"  joint="right_ankle_roll_joint"
+              ctrlrange="-0.26 0.26"  kp="50.0" kv="0.3" forcerange="-200.0 200.0"/>
   </actuator>
 
 
