@@ -73,3 +73,6 @@ datasets
 
 # Mimic
 *.npz
+
+# Mujoco XML
+MUJOCO_LOG.TXT
