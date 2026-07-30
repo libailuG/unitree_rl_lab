@@ -138,14 +138,28 @@ def main():
                     corner_idx = [0, nx - 1, (ny - 1) * nx, ny * nx - 1]  # [0, 16, 170, 186]
                 else:
                     corner_idx = [0, num_rays - 1, num_rays // 2 - 1, num_rays // 2]
+                print(f"  corner_idx: {corner_idx}")
+                '''
+
+                index = y_index * 17 + x_index
+                x = -0.8 + x_index * 0.1   # 前方为正
+                y = -0.5 + y_index * 0.1   # 左方为正
+
+                '''
                 # height_scan formula: sensor_z - hit_z - 0.5, clamped to (-1, 1)
                 sensor_z = hs_data.pos_w[:, 2]                          # (num_envs,)
                 height_scan_full = sensor_z.unsqueeze(1) - ray_hits[..., 2] - 0.5  # (num_envs, 187)
                 height_scan_full = torch.clamp(height_scan_full, -1.0, 1.0)
                 corner_vals = height_scan_full[:, corner_idx]           # (num_envs, 4)
+
+                # print(sensor_z.unsqueeze(1)[env_idx])
+                # print(ray_hits[..., 2][env_idx])
+
+                # (num_envs, 4)
                 print(f"[Step {timestep}] height_scan({num_rays} rays), env {env_idx}, clip=(-1,1):"
                       f"  rear-right={corner_vals[env_idx, 0]:.4f}  front-right={corner_vals[env_idx, 1]:.4f}"
                       f"  rear-left={corner_vals[env_idx, 2]:.4f}  front-left={corner_vals[env_idx, 3]:.4f}")
+                
 
         timestep += 1
 

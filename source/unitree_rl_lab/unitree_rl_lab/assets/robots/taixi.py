@@ -232,9 +232,20 @@ TAIXI_A2_ROUGH_CFG = UnitreeArticulationCfg(
         usd_path=f"{TAIXI_MODEL_DIR}/A2/usd/a2.usd",
     ),
     init_state=ArticulationCfg.InitialStateCfg(
-        pos=(0.0, 0.0, 1.05),
+        # pos=(0.0, 0.0, 1.05),
+
+        # '''
+
+        # 验证 height_scan 186 (0.8, 0.5)
         # pos=(0.2, 0.6, 1.05),
         # rot=(0.9659, 0.0, 0.0, 0.2588),
+
+        # '''
+        pos=(0.4, 0.0, 1.05),
+        rot=(0.9659, 0.0, 0.0, 0.2588),
+
+
+
         joint_pos={
             ".*hip_roll.*" : 0.0,
             ".*hip_yaw.*" : 0.0,
