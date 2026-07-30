@@ -322,15 +322,39 @@ def compute_obs(data,velocity_commands,last_action, height_scanner_obs, global_t
 step_count = 0
 run_first_flag = True
 
- 
+
 
 def step_callback(_model, _data):
-    global step_count, sensor_name, sensor_link_name
+    global step_count, sensor_name, action, run_first_flag
     step_count += 1
 
+    valid_z = get_ray_caster_obs(_data, sensor_name)
+
     if run_first_flag:
+
+        if step_count >= 199:
+            run_first_flag = False
+
+        compute_obs(_data,velocity_commands, action, valid_z, step_count * sim_dt, add_noise=False)
+
         _data.ctrl = init_joint_pos_isaaclab[isaaclab_to_mj_act]
 
+    else:
+        if step_count % decimation == 0:
+            compute_obs(_data,velocity_commands, action, valid_z, step_count * sim_dt, add_noise=False)
+            obs_tensor = torch.from_numpy(obs_fifo.get_fifo()).float().unsqueeze(0)
+            with torch.no_grad():
+                action_isaaclab = policy(obs_tensor).squeeze(0).numpy()
+            action = np.clip(action_isaaclab, -clip_actions, clip_actions)
+            target_q = init_joint_pos_isaaclab + action * action_scale
+            _data.ctrl = target_q[isaaclab_to_mj_act]
+
+    if step_count % 100 == 0:
+        pass
+        # valid_z = get_ray_caster_obs(_data, sensor_name)
+        # if len(valid_z) > 0:
+        #     print(f"[step {step_count:4d}]")
+        #     print(f"valid_z.shape={valid_z.shape},valid_z:{valid_z[0 * 17 + 0],valid_z[0 * 17 + 16],valid_z[10 * 17 + 0],valid_z[10 * 17 + 16]}")
 
 
 
