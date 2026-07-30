@@ -145,8 +145,8 @@ def main():
                     else:
                         step_flag = False
                         print(step_count)
-                        print(obs_dict["policy"])
-                        print((actions[0] * 0.25 + init_joint_pos_isaaclab.to(actions.device))/torch.pi * 180.0)
+                        # print(obs_dict["policy"])
+                        # print((actions[0] * 0.25 + init_joint_pos_isaaclab.to(actions.device))/torch.pi * 180.0)
 
                     # env stepping
                     obs_dict, _, _, _, _ = env.step(actions)

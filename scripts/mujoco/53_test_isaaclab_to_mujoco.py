@@ -532,7 +532,7 @@ def main():
 
 
                         if step_count % decimation == 0:
-                            # step_flag = False
+                            step_flag = False
                             # print(step_count)
                             # obs_compute
                             compute_obs(data,velocity_commands, action, height_scanner_obs, step_count * sim_dt, add_noise=False)

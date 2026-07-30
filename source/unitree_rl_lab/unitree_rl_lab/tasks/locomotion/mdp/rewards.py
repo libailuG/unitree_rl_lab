@@ -263,6 +263,55 @@ def double_air_time_penalty(
     return both_air.float()
 
 
+def feet_pressure_flat(
+    env: ManagerBasedRLEnv,
+    sensor_cfg: SceneEntityCfg,
+    threshold: float = 1.0,
+    asset_cfg: SceneEntityCfg = SceneEntityCfg("robot", body_names=[".*lfoot.*", ".*rfoot.*"]),
+) -> torch.Tensor:
+    """Reward feet for being level (flat) when under pressure.
+
+    When a foot contacts the ground and bears weight, this reward encourages the
+    foot sole to stay parallel to the ground by measuring how well the foot's
+    local z-axis aligns with the world z-axis.
+
+    The reward is computed per foot as:
+        flatness = dot(foot_local_z, world_z) = 1 - 2*(qx² + qy²)
+    where qx, qy are the x,y quaternion components of the foot's world orientation.
+    The flatness is then weighted by a continuous pressure factor (clamped force
+    magnitude / threshold) so that only loaded feet contribute.
+
+    Args:
+        env: The environment.
+        sensor_cfg: Contact sensor configuration. The sensor's body_ids
+            should resolve to the foot bodies to read forces from.
+        threshold: Contact force magnitude (N) above which a foot is
+            considered fully loaded. Defaults to 1.0.
+        asset_cfg: Robot articulation configuration whose body_names
+            resolve to the foot bodies for orientation queries.
+
+    Returns:
+        Reward tensor of shape (num_envs,) — mean per-foot flatness weighted
+        by contact pressure. Range is approximately [-1.0, 1.0] where higher
+        values indicate flatter foot placement under load.
+    """
+    # -- contact pressure
+    contact_sensor: ContactSensor = env.scene.sensors[sensor_cfg.name]
+    net_forces = contact_sensor.data.net_forces_w[:, sensor_cfg.body_ids, :]  # (N, B, 3)
+    force_mag = torch.norm(net_forces, dim=-1)  # (N, B)
+    pressure_weight = torch.clamp(force_mag / threshold, max=1.0)  # (N, B), 0..1
+
+    # -- foot flatness via quaternion
+    asset: Articulation = env.scene[asset_cfg.name]
+    foot_quats = asset.data.body_quat_w[:, asset_cfg.body_ids, :]  # (N, B, 4), wxyz
+    # local-z dot world-z = 1 - 2·(qx² + qy²)  (third column of rotation matrix)
+    flatness = 1.0 - 2.0 * (foot_quats[..., 1] ** 2 + foot_quats[..., 2] ** 2)  # (N, B)
+
+    # -- combine: reward flat feet under load
+    weighted_flatness = pressure_weight * flatness  # (N, B)
+    return torch.mean(weighted_flatness, dim=1)  # (N,)
+
+
 
 
 """

@@ -156,6 +156,11 @@ python scripts/rsl_rl/play.py --task Taixi-A2-Velocity-Rough \
     --checkpoint /home/libai/05_unitree_rl_lab/unitree_rl_lab/logs/rsl_rl/taixi_a2_velocity_rough/2026-07-29_13-49-49/model_1700.pt
 
 
+python scripts/rsl_rl/play.py --task Taixi-A2-Velocity-Rough \
+    --num_envs 16 \
+    --checkpoint /home/libai/05_unitree_rl_lab/unitree_rl_lab/logs/rsl_rl/taixi_a2_velocity_rough/2026-07-30_14-50-04/model_1400.pt
+
+    
 
 '''
 '''

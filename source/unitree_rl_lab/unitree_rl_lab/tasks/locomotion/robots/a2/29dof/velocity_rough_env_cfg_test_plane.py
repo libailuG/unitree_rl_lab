@@ -293,6 +293,13 @@ class TerminationsCfg:
         func=mdp_2.illegal_contact,
         params={"sensor_cfg": SceneEntityCfg("contact_forces", body_names="base_link"), "threshold": 1.0},
     )
+    feet_self_collision = DoneTerm(
+        func=mdp_2.feet_self_collision,
+        params={
+            "threshold": 0.15,
+            "asset_cfg": SceneEntityCfg("robot", body_names=[".*lfoot.*", ".*rfoot.*"]),
+        },
+    )
 
 
 @configclass

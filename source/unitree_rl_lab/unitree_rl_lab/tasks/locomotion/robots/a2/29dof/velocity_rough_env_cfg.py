@@ -301,6 +301,13 @@ class TerminationsCfg:
         func=mdp_2.illegal_contact,
         params={"sensor_cfg": SceneEntityCfg("contact_forces", body_names="base_link"), "threshold": 1.0},
     )
+    feet_self_collision = DoneTerm(
+        func=mdp_2.feet_self_collision,
+        params={
+            "threshold": 0.15, # 0.24
+            "asset_cfg": SceneEntityCfg("robot", body_names=[".*lfoot.*", ".*rfoot.*"]),
+        },
+    )
 
 
 @configclass
@@ -439,6 +446,19 @@ class A2Rewards(RewardsCfg):
         weight=-1.0,
         params={"sensor_cfg": SceneEntityCfg("contact_forces", body_names=[".*lfoot.*", ".*rfoot.*"])},
     )
+    # -- feet_pressure_flat: reward feet for staying level (flat) when loaded.
+    # When the foot contact force exceeds the threshold, the reward encourages
+    # the foot sole to be parallel to the ground (local-z aligned with world-z),
+    # producing more stable and natural foot-ground contact during stance.
+    feet_pressure_flat = RewTerm(
+        func=mdp.feet_pressure_flat,
+        weight=0.0,
+        params={
+            "threshold": 10.0,
+            "sensor_cfg": SceneEntityCfg("contact_forces", body_names=[".*lfoot.*", ".*rfoot.*"]),
+            "asset_cfg": SceneEntityCfg("robot", body_names=[".*lfoot.*", ".*rfoot.*"]),
+        },
+    )
 
     # Penalize deviation from target base height  libai
     # base_height = RewTerm(
@@ -575,7 +595,7 @@ class A2RoughEnvCfg(LocomotionVelocityRoughEnvCfg):
         self.events.base_com = None
 
         # Rewards
-        self.rewards.lin_vel_z_l2.weight = 0.0
+        self.rewards.lin_vel_z_l2.weight = -0.2
         self.rewards.undesired_contacts = None
         self.rewards.flat_orientation_l2.weight = -1.0
         self.rewards.action_rate_l2.weight = -0.005

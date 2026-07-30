@@ -14,7 +14,7 @@ from __future__ import annotations
 import torch
 from typing import TYPE_CHECKING
 
-from isaaclab.assets import RigidObject
+from isaaclab.assets import Articulation, RigidObject
 from isaaclab.managers import SceneEntityCfg
 
 if TYPE_CHECKING:
@@ -50,3 +50,29 @@ def terrain_out_of_bounds(
         return torch.logical_or(x_out_of_bounds, y_out_of_bounds)
     else:
         raise ValueError("Received unsupported terrain type, must be either 'plane' or 'generator'.")
+
+
+def feet_self_collision(
+    env: ManagerBasedRLEnv,
+    threshold: float = 0.15,
+    asset_cfg: SceneEntityCfg = SceneEntityCfg("robot", body_names=[".*lfoot.*", ".*rfoot.*"]),
+) -> torch.Tensor:
+    """Terminate when left and right feet are too close to each other (self-collision).
+
+    Computes the L2 distance between the world positions of the two feet. If the
+    distance falls below the given threshold, terminates the episode.
+
+    Args:
+        env: The environment.
+        threshold: Minimum allowed center-to-center distance (in meters) between the
+            left and right feet. Defaults to 0.15.
+        asset_cfg: The scene entity config pointing to the robot's two foot bodies.
+            Body names must resolve to exactly two bodies.
+
+    Returns:
+        A boolean tensor of shape (num_envs,) — True where feet are too close.
+    """
+    asset: Articulation = env.scene[asset_cfg.name]
+    feet_pos = asset.data.body_pos_w[:, asset_cfg.body_ids, :]  # (N, 2, 3)
+    distance = torch.norm(feet_pos[:, 0, :] - feet_pos[:, 1, :], dim=-1)  # (N,)
+    return distance < threshold

@@ -24,7 +24,7 @@
 
   <default>
 
-    <joint damping="0.01" armature="0.00" limited="true"/>
+    <joint damping="0.00" armature="0.00" limited="true"/>
     <!-- <motor ctrlrange="-1 1" ctrllimited="false"/> -->
 
     <default class="gemo_visual">  <!-- 只显示,不参与碰撞 -->
