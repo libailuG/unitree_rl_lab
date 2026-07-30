@@ -123,7 +123,7 @@ mujoco 模型参数
 
 
 # 加载模型
-MODEL_PATH = os.path.join(os.path.dirname(__file__), "../../taixi_model/A2/urdf/a2_box.xml")
+MODEL_PATH = os.path.join(os.path.dirname(__file__), "../../taixi_model/A2/urdf/a2_box_plugin.xml")
 
 
 model = mujoco.MjModel.from_xml_path(MODEL_PATH)

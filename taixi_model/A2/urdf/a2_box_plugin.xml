@@ -24,7 +24,7 @@
 
   <default>
 
-    <joint damping="0.0" armature="0.00" limited="true"/>
+    <joint damping="0.01" armature="0.00" limited="true"/>
     <!-- <motor ctrlrange="-1 1" ctrllimited="false"/> -->
 
     <default class="gemo_visual">  <!-- 只显示,不参与碰撞 -->
@@ -91,7 +91,7 @@
 
       
       <body name="raycaster_link" pos="0 0 0.0">
-        <geom type="sphere" size=".1" rgba="1 1 1 1" />
+        <geom class="gemo_visual" type="sphere" size="0.01" rgba="1 1 1 1" />
         <camera name="RayCaster" />
       </body>
 
@@ -111,18 +111,21 @@
             <inertial pos="0.00472 -0.01824 -0.17562" mass="0.81624"
                       fullinertia="0.01192 0.01225 0.00052 -4E-05 -0.00047 -0.00068"/>
             <joint name="left_hip_pitch_joint" axis="0 1 0" range="-2.53 2.88"/>
+            <!-- <joint name="left_hip_pitch_joint" axis="0 1 0" range="-2.53 2.88" ref="0.1745"/> -->
             <geom class="gemo_visual" type="mesh" mesh="mesh_l_hip_pitch"/>
 
             <body name="left_knee_link" pos="0 -0.04325 -0.4" euler="0 0 0">
               <inertial pos="0 0.01314 -0.14741" mass="0.10574"
                         fullinertia="0.0018 0.0018 1E-05 0 0 -1E-05"/>
               <joint name="left_knee_joint" axis="0 1 0" range="-0.09 2.88"/>
+              <!-- <joint name="left_knee_joint" axis="0 1 0" range="-0.09 2.88" ref="-0.3490"/> -->
               <geom class="gemo_visual" type="mesh" mesh="mesh_l_knee"/>
 
               <body name="left_ankle_pitch_link" pos="0 0.00825 -0.392" euler="0 0 0">
                 <inertial pos="-0.04625 -0.01898 0" mass="0.04908"
                           fullinertia="7E-05 5E-05 0.00011 -4E-05 0 0"/>
                 <joint name="left_ankle_pitch_joint" axis="0 1 0" range="-0.87 0.52"/>
+                <!-- <joint name="left_ankle_pitch_joint" axis="0 1 0" range="-0.87 0.52" ref="0.1745"/> -->
                 <geom class="gemo_visual" type="mesh" mesh="mesh_l_ankle_pitch"/>
 
                 <body name="left_ankle_roll_link" pos="-0.063229 -0.0765 0" euler="0 0 0">
@@ -158,18 +161,22 @@
             <inertial pos="0.00472 0.01824 -0.17562" mass="0.81624"
                       fullinertia="0.01192 0.01225 0.00052 4E-05 -0.00047 0.00068"/>
             <joint name="right_hip_pitch_joint" axis="0 1 0" range="-2.53 2.88"/>
+            <!-- <joint name="right_hip_pitch_joint" axis="0 1 0" range="-2.53 2.88" ref="0.1745"/> -->
+
             <geom class="gemo_visual" type="mesh" mesh="mesh_r_hip_pitch"/>
 
             <body name="right_knee_link" pos="0 0.04325 -0.4" euler="0 0 0">
               <inertial pos="0 -0.01314 -0.14741" mass="0.10574"
                         fullinertia="0.0018 0.0018 1E-05 0 0 1E-05"/>
               <joint name="right_knee_joint" axis="0 1 0" range="-0.09 2.88"/>
+              <!-- <joint name="right_knee_joint" axis="0 1 0" range="-0.09 2.88" ref="-0.3490"/> -->
               <geom class="gemo_visual" type="mesh" mesh="mesh_r_knee"/>
 
               <body name="right_ankle_pitch_link" pos="0 -0.00825 -0.392" euler="0 0 0">
                 <inertial pos="-0.04625 0.01898 0" mass="0.04908"
                           fullinertia="7E-05 5E-05 0.00011 4E-05 0 0"/>
                 <joint name="right_ankle_pitch_joint" axis="0 1 0" range="-0.87 0.52"/>
+                <!-- <joint name="right_ankle_pitch_joint" axis="0 1 0" range="-0.87 0.52" ref="0.1745"/> -->
                 <geom class="gemo_visual" type="mesh" mesh="mesh_r_ankle_pitch"/>
 
                 <body name="right_ankle_roll_link" pos="-0.063229 0.0765 0" euler="0 0 0">

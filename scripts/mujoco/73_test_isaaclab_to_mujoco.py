@@ -19,6 +19,7 @@ import numpy as np
 import math
 import os
 import torch
+import time
 
 from libai_arraytfifo import ArrayFIFO
 from libai_keyboard import TermiosKeyMonitor
@@ -321,69 +322,23 @@ def compute_obs(data,velocity_commands,last_action, height_scanner_obs, global_t
 step_count = 0
 run_first_flag = True
 
-# ============================================================
-# 稳定阶段参数：机器人初始化时施加虚拟力防止倒地
-# ============================================================
-STABILIZE_STEPS = 800        # 稳定步数 (400步 × 0.005s = 2秒)
-base_body_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_BODY, "base_link")
+ 
 
 def step_callback(_model, _data):
     global step_count, sensor_name, sensor_link_name
     step_count += 1
 
-    # =================================================================
-    # 稳定阶段：施加虚拟力稳住机器人 (xfrc_applied 作用在 base_link)
-    # =================================================================
-    if step_count < STABILIZE_STEPS:
-
-
-        _data.xfrc_applied[base_body_id, :] = [
-            -2.0, 0.0, 0.0,                     # 世界系力: Fz 向上
-            0.0, 0.0, 0.0,                     # 世界系力矩
-        ]
-
-        # 稳定期间关节锁定在初始站立位姿
+    if run_first_flag:
         _data.ctrl = init_joint_pos_isaaclab[isaaclab_to_mj_act]
 
-    # =================================================================
-    # 稳定阶段结束：之后由策略接管
-    # =================================================================
-
-    # if run_first_flag:
-        # _data.ctrl = init_joint_pos_isaaclab[isaaclab_to_mj_act]
-        
-
-
-    # ---------- 每 100 步打印一次传感器数据 ----------
-    # if step_count % 100 != 0:
-    #     return
-
-    valid_z = get_ray_caster_obs(_data, sensor_name)
-    # if len(valid_z) > 0:
-    #     print(f"[step {step_count:4d}]")
-    #     print(f"valid_z.shape={valid_z.shape},valid_z:{valid_z[0 * 17 + 0],valid_z[0 * 17 + 16],valid_z[10 * 17 + 0],valid_z[10 * 17 + 16]}")
-
 
 
 
 
 # ============================================================
-# 6. 注册回调 + 启动仿真窗口
+# 6. 注册回调 + 启动仿真窗口（内部是无限循环，直到关闭窗口）
 # ============================================================
 mujoco.set_mjcb_passive(step_callback)
-
-with mujoco.viewer.launch_passive(model, data) as viewer:
-    # 可视化设置
-    viewer._opt.geomgroup[3] = 1   # 显示碰撞体 (group 3)
-    viewer._opt.geomgroup[4] = 1   # 显示地面 (group 4)
-    viewer.opt.flags[mujoco.mjtVisFlag.mjVIS_RANGEFINDER] = False
-
-    # 初始视角
-    viewer.cam.lookat = [0.0, 0.0, 0.5]
-    viewer.cam.distance = 3.0
-    viewer.cam.azimuth = 90
-    viewer.cam.elevation = -15
-
-    # 主循环
-    while viewer.is_running():
-        mujoco.mj_step(model, data)
+mujoco.viewer.launch(model, data)
+# mujoco.viewer.launch(model, data)._opt.geomgroup[3] = 1
+# mujoco.viewer.launch_passive(model, data) as viewer
